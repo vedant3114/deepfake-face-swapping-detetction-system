@@ -343,45 +343,59 @@ const resetUpload = () => {
   currentStep.value = 0;
 };
 
-const startAnalysis = () => {
+const startAnalysis = async () => {
   if (!file.value) return;
-  
+
   isAnalyzing.value = true;
-  progress.value = 0;
-  currentStep.value = 0;
+  progress.value = 5;
   analysisComplete.value = false;
-  
-  // Simulate analysis progress
-  const interval = setInterval(() => {
-    progress.value += 10;
-    
-    // Update current step based on progress
-    if (progress.value >= 30 && currentStep.value < 1) {
-      currentStep.value = 1;
-    } else if (progress.value >= 70 && currentStep.value < 2) {
-      currentStep.value = 2;
+
+  try {
+    const form = new FormData();
+    form.append('file', file.value as Blob, (file.value as File).name);
+
+    // POST to backend
+    const resp = await fetch('http://localhost:8000/predict', {
+      method: 'POST',
+      body: form,
+    });
+
+    if (!resp.ok) {
+      const txt = await resp.text();
+      throw new Error(`Server error: ${resp.status} ${txt}`);
     }
-    
-    if (progress.value >= 100) {
-      clearInterval(interval);
-      completeAnalysis();
+
+    progress.value = 80;
+    const data = await resp.json();
+    const result = data?.result ?? data;
+
+    // Accept multiple shapes from backend
+    const label = result?.label ?? (result === 'DEEPFAKE' ? 'DEEPFAKE' : 'AUTHENTIC');
+    analysisResult.value = label === 'DEEPFAKE' ? 'DEEPFAKE' : 'AUTHENTIC';
+
+    // optional: show a different image per result
+    if (analysisResult.value === 'AUTHENTIC') {
+      analysisImageUrl.value = "https://lh3.googleusercontent.com/aida-public/AB6AXuBWykGhzIhAAROV41C5B3xoquJD9m81hBvD8p1gT6EhIjDdIGG9gev_yvHpgEF_RNke8_0jE2zdQo_Uj1hBPHwFiVdcwwt4VZJZzWzzf8CZPDjye1RT59yI_qUNXWyDiqcO7Beca8C6nkZOQkzTIqPBBu1P5sxTHIHPWqv8EH68Sf1mcEVy1W0U_sOz3oDl-91RMe4WHCc56ROdbJ5J-i-rgM7sp56j69mJry4mR5Xau4klNDx1yBGegqPrp-ddQFjMe_a5Ibde2pk";
+    } else {
+      analysisImageUrl.value = "https://lh3.googleusercontent.com/aida-public/AB6AXuBWykGhzIhAAROV41C5B3xoquJD9m81hBvD8p1gT6EhIjDdIGG9gev_yvHpgEF_RNke8_0jE2zdQo_Uj1hBPHwFiVdcwwt4VZJZzWzzf8CZPDjye1RT59yI_qUNXWyDiqcO7Beca8C6nkZOQkzTIqPBBu1P5sxTHIHPWqv8EH68Sf1mcEVy1W0U_sOz3oDl-91RMe4WHCc56ROdbJ5J-i-rgM7sp56j69mJry4mR5Xau4klNDx1yBGegqPrp-ddQFjMe_a5Ibde2pk";
     }
-  }, 300);
+
+    progress.value = 100;
+    analysisComplete.value = true;
+  } catch (err: any) {
+    console.error(err);
+    alert('Analysis failed: ' + (err?.message ?? err));
+    isAnalyzing.value = false;
+    progress.value = 0;
+  } finally {
+    isAnalyzing.value = false;
+  }
 };
 
 const completeAnalysis = () => {
+  // kept for compatibility; analysis result is set in startAnalysis
   isAnalyzing.value = false;
   analysisComplete.value = true;
-  
-  // Randomly determine result (60% chance for authentic, 40% for deepfake)
-  analysisResult.value = Math.random() < 0.6 ? 'AUTHENTIC' : 'DEEPFAKE';
-  
-  // Set analysis image based on result
-  if (analysisResult.value === 'AUTHENTIC') {
-    analysisImageUrl.value = "https://lh3.googleusercontent.com/aida-public/AB6AXuBWykGhzIhAAROV41C5B3xoquJD9m81hBvD8p1gT6EhIjDdIGG9gev_yvHpgEF_RNke8_0jE2zdQo_Uj1hBPHwFiVdcwwt4VZJZzWzzf8CZPDjye1RT59yI_qUNXWyDiqcO7Beca8C6nkZOQkzTIqPBBu1P5sxTHIHPWqv8EH68Sf1mcEVy1W0U_sOz3oDl-91RMe4WHCc56ROdbJ5J-i-rgM7sp56j69mJry4mR5Xau4klNDx1yBGegqPrp-ddQFjMe_a5Ibde2pk";
-  } else {
-    analysisImageUrl.value = "https://lh3.googleusercontent.com/aida-public/AB6AXuBWykGhzIhAAROV41C5B3xoquJD9m81hBvD8p1gT6EhIjDdIGG9gev_yvHpgEF_RNke8_0jE2zdQo_Uj1hBPHwFiVdcwwt4VZJZzWzzf8CZPDjye1RT59yI_qUNXWyDiqcO7Beca8C6nkZOQkzTIqPBBu1P5sxTHIHPWqv8EH68Sf1mcEVy1W0U_sOz3oDl-91RMe4WHCc56ROdbJ5J-i-rgM7sp56j69mJry4mR5Xau4klNDx1yBGegqPrp-ddQFjMe_a5Ibde2pk";
-  }
 };
 
 const resetAnalysis = () => {
