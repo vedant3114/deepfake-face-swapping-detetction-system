@@ -156,6 +156,155 @@
             </div>
           </div>
 
+          <!-- Image Upload Section -->
+          <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 md:px-6 pb-2 sm:pb-3 pt-6 sm:pt-8">Image Upload</h2>
+
+          <div class="flex flex-col p-3 sm:p-4">
+            <div 
+              v-if="!imageUploaded" 
+              class="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#2e6b6b] px-4 sm:px-6 py-6 sm:py-14 transition-all duration-300 hover:border-[#00ffff]"
+              @dragover.prevent="imagesDraggedOver = true"
+              @dragleave.prevent="imagesDraggedOver = false"
+              @drop.prevent="handleImageDrop"
+              @click="triggerImageFileInput"
+            >
+              <div class="flex max-w-[320px] sm:max-w-[480px] flex-col items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#00ffff" viewBox="0 0 256 256" class="mb-2">
+                  <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.82l-26.35-26.35a16,16,0,0,0-22.63,0l-20,20-40-40a16,16,0,0,0-22.63,0L40,149.17V56ZM40,200V189.17l52-52,92,92Zm176,0H147.17l40-40,28.85,28.85V200ZM80,92A12,12,0,1,1,92,80,12,12,0,0,1,80,92Z"/>
+                </svg>
+                <p class="text-white text-base sm:text-lg font-bold leading-tight max-w-[320px] sm:max-w-[480px] text-center px-2">
+                  {{ imagesDraggedOver ? 'Release to drop your image' : 'Drag and drop an image here' }}
+                </p>
+                <p class="text-white text-xs sm:text-sm font-normal leading-normal max-w-[320px] sm:max-w-[480px] text-center px-2">
+                  Or click to upload (JPG, PNG, WebP)
+                </p>
+              </div>
+              <button
+                class="flex min-w-[64px] sm:min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 sm:h-10 px-3 sm:px-4 bg-[#204b4b] text-white text-xs sm:text-sm font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105"
+              >
+                <span class="truncate">Upload Image</span>
+              </button>
+              <input
+                type="file"
+                ref="imageFileInput"
+                accept="image/jpeg,image/png,image/webp"
+                @change="handleImageFileUpload"
+                class="hidden"
+              />
+            </div>
+
+            <div v-else class="flex flex-col gap-4 rounded-xl border-2 border-[#00ffff] px-4 py-6">
+              <div class="flex flex-col sm:flex-row items-center gap-4">
+                <img 
+                  :src="imagePreviewUrl" 
+                  :alt="image?.name"
+                  class="w-full sm:w-48 h-auto sm:h-48 object-cover rounded-lg border border-[#2e6b6b]"
+                />
+                <div class="flex-1 flex flex-col gap-3">
+                  <div class="text-white text-sm font-medium break-all">
+                    {{ image?.name }}
+                  </div>
+                  <div class="text-[#8dcece] text-xs">
+                    Size: {{ (image?.size ?? 0 / 1024 / 1024).toFixed(2) }} MB
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      @click="resetImageUpload"
+                      class="flex min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-3 bg-[#204b4b] text-white text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105"
+                    >
+                      <span class="truncate">Remove</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="imageUploaded && !imageAnalysisComplete" class="flex flex-col gap-2 sm:gap-3 p-3 sm:p-4">
+            <div class="flex gap-4 sm:gap-6 justify-between">
+              <p class="text-white text-sm sm:text-base font-medium leading-normal">
+                {{ isImageAnalyzing ? 'Processing...' : 'Ready to process' }}
+              </p>
+              <p class="text-[#00ffff] text-xs sm:text-sm font-medium leading-normal">
+                {{ isImageAnalyzing ? imageProgress + '%' : 'Click Process to start' }}
+              </p>
+            </div>
+            <div class="rounded bg-[#2e6b6b] h-3 sm:h-2">
+              <div 
+                class="h-full rounded bg-[#00ffff] transition-all duration-500 ease-out" 
+                :style="{ width: imageProgress + '%' }"
+              ></div>
+            </div>
+            <p class="text-[#8dcece] text-xs sm:text-sm font-normal leading-normal">
+              {{ isImageAnalyzing ? 'Processing image...' : 'Ready to process image' }}
+            </p>
+          </div>
+
+          <div v-if="imageUploaded && !imageAnalysisComplete" class="flex px-3 sm:px-4 py-2 sm:py-3 justify-center">
+            <button
+              @click="startImageAnalysis"
+              :disabled="isImageAnalyzing"
+              class="flex min-w-[64px] sm:min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 sm:h-10 px-3 sm:px-4 bg-[#00ffff] text-[#0f2424] text-xs sm:text-sm font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              <span class="truncate">
+                {{ isImageAnalyzing ? 'Processing...' : 'Process Image' }}
+              </span>
+            </button>
+          </div>
+
+          <div v-if="imageAnalysisComplete" class="p-3 sm:p-4">
+            <div class="flex flex-col gap-4 rounded-xl border-2 border-[#2e6b6b] bg-[#173636] p-4 sm:p-6">
+              <div class="flex flex-col sm:flex-row gap-4 items-start">
+                <img 
+                  :src="imagePreviewUrl" 
+                  :alt="image?.name"
+                  class="w-full sm:w-48 h-auto sm:h-48 object-cover rounded-lg border border-[#2e6b6b]"
+                />
+                <div class="flex-1 flex flex-col gap-4">
+                  <div>
+                    <p 
+                      class="text-white tracking-light text-xl sm:text-2xl font-bold leading-tight mb-2"
+                      :class="imageAnalysisResult === 'AUTHENTIC' ? 'text-green-400' : 'text-red-400'"
+                    >
+                      {{ imageAnalysisResult }}
+                    </p>
+                    <p class="text-[#8dcece] text-sm">
+                      Confidence: {{ imageConfidence }}%
+                    </p>
+                  </div>
+                  <div 
+                    class="bg-[#204b4b] rounded-lg p-4"
+                    v-if="imageAnalysisResult === 'DEEPFAKE'"
+                  >
+                    <h3 class="text-white text-sm font-bold mb-2">Deepfake Detection Findings</h3>
+                    <ul class="text-[#8dcece] text-xs space-y-1">
+                      <li>• Face manipulation detected</li>
+                      <li>• Texture inconsistencies found</li>
+                      <li>• Blending artifacts identified</li>
+                    </ul>
+                  </div>
+                  <div 
+                    class="bg-[#173636] rounded-lg p-4 border border-[#2e6b6b]"
+                    v-else
+                  >
+                    <h3 class="text-white text-sm font-bold mb-2">Authenticity Confirmed</h3>
+                    <ul class="text-[#8dcece] text-xs space-y-1">
+                      <li>• No face manipulation detected</li>
+                      <li>• Natural texture patterns confirmed</li>
+                      <li>• No suspicious blending artifacts</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <button
+                @click="resetImageAnalysis"
+                class="flex min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-3 bg-[#204b4b] text-white text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 w-full sm:w-auto"
+              >
+                <span class="truncate">Analyze Another Image</span>
+              </button>
+            </div>
+          </div>
+
           <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 md:px-6 pb-2 sm:pb-3 pt-3 sm:pt-5">How It Works</h2>
 
           <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2 sm:gap-3 p-3 sm:p-4">
@@ -270,6 +419,18 @@ const progress = ref(0);
 const currentStep = ref(0);
 const draggedOver = ref(false);
 const analysisImageUrl = ref('');
+
+// Image upload state variables
+const imageFileInput = ref<HTMLInputElement | null>(null);
+const image = ref<File | null>(null);
+const imageUploaded = ref(false);
+const isImageAnalyzing = ref(false);
+const imageAnalysisComplete = ref(false);
+const imageAnalysisResult = ref<'AUTHENTIC' | 'DEEPFAKE'>('AUTHENTIC');
+const imageProgress = ref(0);
+const imagesDraggedOver = ref(false);
+const imagePreviewUrl = ref('');
+const imageConfidence = ref(0);
 
 // Steps for the process
 const steps = [
@@ -402,6 +563,104 @@ const resetAnalysis = () => {
   analysisComplete.value = false;
   progress.value = 0;
   currentStep.value = 0;
+};
+
+// Image upload methods
+const triggerImageFileInput = () => {
+  if (imageFileInput.value) {
+    imageFileInput.value.click();
+  }
+};
+
+const handleImageFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    image.value = target.files[0];
+    imageUploaded.value = true;
+    imageProgress.value = 0;
+    imageAnalysisComplete.value = false;
+    imageAnalysisResult.value = 'AUTHENTIC';
+    
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreviewUrl.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(target.files[0]);
+  }
+};
+
+const handleImageDrop = (event: DragEvent) => {
+  event.preventDefault();
+  imagesDraggedOver.value = false;
+  
+  if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+    const droppedFile = event.dataTransfer.files[0];
+    if (droppedFile.type.startsWith('image/')) {
+      image.value = droppedFile;
+      imageUploaded.value = true;
+      imageProgress.value = 0;
+      imageAnalysisComplete.value = false;
+      imageAnalysisResult.value = 'AUTHENTIC';
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreviewUrl.value = e.target?.result as string;
+      };
+      reader.readAsDataURL(droppedFile);
+    }
+  }
+};
+
+const resetImageUpload = () => {
+  image.value = null;
+  imageUploaded.value = false;
+  imageProgress.value = 0;
+  imageAnalysisComplete.value = false;
+  imagePreviewUrl.value = '';
+  imageConfidence.value = 0;
+};
+
+const startImageAnalysis = async () => {
+  if (!image.value) return;
+
+  isImageAnalyzing.value = true;
+  imageProgress.value = 5;
+  imageAnalysisComplete.value = false;
+
+  // Simulate processing with progress updates
+  try {
+    // Simulate progress increments
+    for (let i = 5; i < 80; i += 15) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      imageProgress.value = i;
+    }
+
+    // Simulate random result for testing UI
+    const isDeepfake = Math.random() > 0.5;
+    imageAnalysisResult.value = isDeepfake ? 'DEEPFAKE' : 'AUTHENTIC';
+    imageConfidence.value = Math.floor(Math.random() * 20 + 80);
+
+    imageProgress.value = 100;
+    imageAnalysisComplete.value = true;
+  } catch (err: any) {
+    console.error(err);
+    alert('Image analysis failed: ' + (err?.message ?? err));
+    isImageAnalyzing.value = false;
+    imageProgress.value = 0;
+  } finally {
+    isImageAnalyzing.value = false;
+  }
+};
+
+const resetImageAnalysis = () => {
+  imageAnalysisComplete.value = false;
+  imageProgress.value = 0;
+  image.value = null;
+  imageUploaded.value = false;
+  imagePreviewUrl.value = '';
+  imageConfidence.value = 0;
 };
 </script>
 
