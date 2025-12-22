@@ -1,3 +1,44 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# PyTorch model weights and large trained artifacts
+models/*.pth
+models/*.pt
+
+# Temporary uploads and caches
+tmp_uploads/
+*.log
+
+# System files
+.DS_Store
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Python testing
+.pytest_cache/
+
+# Node/npm
+node_modules/
+dist/
+.vite/
+
+# Local env files
+.env
 # Logs
 logs
 *.log
