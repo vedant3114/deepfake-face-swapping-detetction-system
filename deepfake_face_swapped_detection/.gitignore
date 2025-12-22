@@ -14,9 +14,10 @@ build/
 dist/
 *.egg-info/
 
-# PyTorch model weights and large trained artifacts
+# Model weights and large trained artifacts
 models/*.pth
 models/*.pt
+models/*.h5
 
 # Temporary uploads and caches
 tmp_uploads/

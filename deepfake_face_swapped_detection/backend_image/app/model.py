@@ -8,7 +8,7 @@ class ModelWrapper:
     def __init__(self, model_path: str):
         self.model_path = model_path
         self.model = None
-        self.input_size = (128, 128)  # CHANGE if your model uses a different size
+        self.input_size = (128, 128)  # change only if your model needs it
 
     def load(self):
         if not os.path.exists(self.model_path):
@@ -44,8 +44,8 @@ class ModelWrapper:
 
         prediction = self.model.predict(img)
 
-        # Binary classification (sigmoid)
-        prob = float(prediction[0][0])
+        # Support both (1,) and (1,1) outputs
+        prob = float(prediction.reshape(-1)[0])
         label = "DEEPFAKE" if prob >= 0.5 else "AUTHENTIC"
 
         return {

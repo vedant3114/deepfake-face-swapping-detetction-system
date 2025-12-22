@@ -8,18 +8,20 @@ Place your trained image model file at:
 
 ```
 backend_image/models/my_model.h5
+
 ```
 
 Run server:
 
 ```bash
 # from backend_image folder (with venv active)
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+python3 -m uvicorn app.main:app --reload --port 8002
+
 ```
 
 Usage (curl):
 ```bash
-curl -F "file=@/path/to/image.jpg" http://localhost:8000/predict-image
+curl -F "file=@/path/to/image.jpg" http://localhost:8002/predict
 ```
 
 API Endpoints:

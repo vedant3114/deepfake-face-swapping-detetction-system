@@ -629,25 +629,36 @@ const startImageAnalysis = async () => {
   imageProgress.value = 5;
   imageAnalysisComplete.value = false;
 
-  // Simulate processing with progress updates
   try {
-    // Simulate progress increments
-    for (let i = 5; i < 80; i += 15) {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      imageProgress.value = i;
+    const form = new FormData();
+    form.append('file', image.value as Blob, (image.value as File).name);
+
+    // POST to the image backend (adjust port if needed)
+    const resp = await fetch('http://localhost:8001/predict', {
+      method: 'POST',
+      body: form,
+    });
+
+    if (!resp.ok) {
+      const txt = await resp.text();
+      throw new Error(`Server error: ${resp.status} ${txt}`);
     }
 
-    // Simulate random result for testing UI
-    const isDeepfake = Math.random() > 0.5;
-    imageAnalysisResult.value = isDeepfake ? 'DEEPFAKE' : 'AUTHENTIC';
-    imageConfidence.value = Math.floor(Math.random() * 20 + 80);
+    imageProgress.value = 60;
+    const data = await resp.json();
+    // backend returns { status: 'ok', result: { label, score } }
+    const result = data?.result ?? data;
+    const label = result?.label ?? (result === 'DEEPFAKE' ? 'DEEPFAKE' : 'AUTHENTIC');
+    const score = typeof result?.score === 'number' ? result.score : (result?.score ? Number(result.score) : 0);
+
+    imageAnalysisResult.value = label === 'DEEPFAKE' ? 'DEEPFAKE' : 'AUTHENTIC';
+    imageConfidence.value = Math.round((Number.isFinite(score) ? score : 0) * 100);
 
     imageProgress.value = 100;
     imageAnalysisComplete.value = true;
   } catch (err: any) {
     console.error(err);
     alert('Image analysis failed: ' + (err?.message ?? err));
-    isImageAnalyzing.value = false;
     imageProgress.value = 0;
   } finally {
     isImageAnalyzing.value = false;
