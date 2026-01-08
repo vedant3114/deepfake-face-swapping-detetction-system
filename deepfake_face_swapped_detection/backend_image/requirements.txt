@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-python-multipart
-aiofiles
-tensorflow
-opencv-python
-numpy

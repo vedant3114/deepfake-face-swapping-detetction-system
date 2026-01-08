@@ -189,13 +189,16 @@ async def predict(file: UploadFile = File(...)):
             prediction_idx = torch.argmax(confidence_scores, dim=1).item()
             conf_score = confidence_scores[0, prediction_idx].item()
 
-        result = "FAKE" if prediction_idx == 1 else "REAL"
+        label = "DEEPFAKE" if prediction_idx == 1 else "AUTHENTIC"
         
         return {
-            "filename": filename,
-            "prediction": result,
-            "confidence": round(conf_score * 100, 2),
-            "is_fake": bool(prediction_idx == 1)
+            "status": "ok",
+            "result": {
+                "label": label,
+                "score": conf_score,
+                "confidence": round(conf_score * 100, 2),
+                "filename": filename
+            }
         }
 
     except Exception as e:

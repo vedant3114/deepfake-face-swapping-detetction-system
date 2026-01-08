@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deepfake Detection System</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-image: url('https://www.mccormick.northwestern.edu/images/news/2024/07/deepfake-detection-system-is-now-live-header.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      margin: 0;
+      height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(18, 18, 18, 0.9);
+      padding: 40px 35px;
+      border-radius: 15px;
+      box-shadow:
+        0 4px 15px rgba(0, 188, 212, 0.4),
+        inset 0 0 10px rgba(0, 188, 212, 0.3);
+      width: 360px;
+      max-width: 100%;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .container:hover {
+      transform: translateY(-5px);
+      box-shadow:
+        0 8px 30px rgba(0, 188, 212, 0.7),
+        inset 0 0 15px rgba(0, 188, 212, 0.5);
+    }
+
+    h1 {
+      margin-bottom: 25px;
+      font-weight: 700;
+      font-size: 2.2rem;
+      color: #00bcd4;
+      text-shadow: 0 0 8px #00bcd4aa;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    label {
+      font-weight: bold;
+      margin-bottom: 10px;
+      align-self: flex-start;
+      color: #ccc;
+    }
+
+    input[type="file"] {
+      margin: 10px 0 30px;
+      color: #eee;
+      font-size: 1rem;
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1.5px solid #00bcd4;
+      background: rgba(255, 255, 255, 0.05);
+      transition: border-color 0.3s ease;
+      cursor: pointer;
+    }
+
+    input[type="file"]::file-selector-button {
+      cursor: pointer;
+      border: none;
+      padding: 8px 15px;
+      margin-right: 10px;
+      background: #00bcd4;
+      color: #121212;
+      font-weight: 600;
+      border-radius: 6px;
+      transition: background 0.3s ease;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: #0097a7;
+    }
+
+    input[type="file"]:focus {
+      outline: none;
+      border-color: #0097a7;
+    }
+
+    button {
+      background: linear-gradient(135deg, #00bcd4, #0097a7);
+      border: none;
+      padding: 14px 30px;
+      color: #121212;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 188, 212, 0.6);
+      transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+      user-select: none;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #0097a7, #007c8a);
+      box-shadow: 0 6px 18px rgba(0, 151, 167, 0.8);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 3px 9px rgba(0, 188, 212, 0.5);
+    }
+
+    #result {
+      margin-top: 25px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      min-height: 1.5em;
+      text-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+      transition: color 0.4s ease;
+    }
+
+    @media (max-width: 400px) {
+      .container {
+        width: 100%;
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      button {
+        width: 100%;
+        padding: 14px 0;
+      }
+    }
+  </style>
+  <meta name="google-site-verification" content="apns7QrFIjRXIbtfDh4BLjaV70zahihj8YoG03M9j_U" />
+</head>
+<body>
+  <div class="container" role="main" aria-label="Deepfake Detection System">
+    <h1>Deepfake Detection</h1>
+    <form id="uploadForm" aria-describedby="result">
+      <label for="imageInput">Choose Image:</label>
+      <input type="file" id="imageInput" accept="image/*" required aria-required="true" aria-label="Upload an image for deepfake detection" />
+      <button type="submit" aria-live="polite">Upload & Detect</button>
+    </form>
+    <div id="result" aria-live="polite" role="status"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const resultDiv = document.getElementById('result');
+    const apiUrl = "https://raturishivaay-deepfakeapinew.hf.space/predict";
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById('imageInput');
+      const button = form.querySelector('button');
+
+      if (!fileInput.files.length) {
+        resultDiv.textContent = '⚠ Please select an image file.';
+        resultDiv.style.color = 'orange';
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      resultDiv.textContent = '🔍 Detecting...';
+      resultDiv.style.color = '#eee';
+      resultDiv.style.textShadow = '0 0 6px #aaa';
+      button.disabled = true;
+      button.textContent = 'Detecting...';
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server returned status ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.label) {
+          if (data.label.toLowerCase() === 'deepfake') {
+            resultDiv.textContent = '⚠ Warning: The image is a Deepfake.';
+            resultDiv.style.color = '#ff4c4c';
+            resultDiv.style.textShadow = '0 0 8px #ff4c4c';
+          } else {
+            resultDiv.textContent = '✅ The image appears Real.';
+            resultDiv.style.color = '#7ed957';
+            resultDiv.style.textShadow = '0 0 8px #7ed957';
+          }
+        } else {
+          throw new Error('Invalid response from server.');
+        }
+
+      } catch (error) {
+        resultDiv.textContent = '❌ Error detecting deepfake. Please try again.';
+        resultDiv.style.color = 'orange';
+        resultDiv.style.textShadow = '0 0 8px orange';
+        console.error('Detection error:', error);
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Upload & Detect';
+      }
+    });
+  </script>
+</body>
+</html>
+
+
