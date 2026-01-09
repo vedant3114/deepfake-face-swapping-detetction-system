@@ -29,9 +29,26 @@
 
           <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 md:px-6 pb-2 sm:pb-3 pt-3 sm:pt-5">Detection Tool</h2>
 
+          <!-- Detection Mode Tabs -->
+          <div class="flex gap-2 sm:gap-4 px-3 sm:px-4 py-2 border-b border-[#2e6b6b]">
+            <button
+              @click="detectionMode = 'upload'"
+              :class="['px-3 sm:px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200', detectionMode === 'upload' ? 'bg-[#00ffff] text-[#0f2424]' : 'text-[#8dcece] hover:text-white']"
+            >
+              📁 Upload Video
+            </button>
+            <button
+              @click="detectionMode = 'url'"
+              :class="['px-3 sm:px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200', detectionMode === 'url' ? 'bg-[#00ffff] text-[#0f2424]' : 'text-[#8dcece] hover:text-white']"
+            >
+              🔗 Video URL
+            </button>
+          </div>
+
           <div class="flex flex-col p-3 sm:p-4">
-            <div 
-              v-if="!fileUploaded" 
+            <!-- Upload Mode -->
+            <div v-show="detectionMode === 'upload'">
+              <div v-if="!fileUploaded" 
               class="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#2e6b6b] px-4 sm:px-6 py-6 sm:py-14 transition-all duration-300 hover:border-[#00ffff]"
               @dragover.prevent
               @drop.prevent="handleFileDrop"
@@ -74,91 +91,125 @@
                 </div>
               </div>
             </div>
-          </div>
 
-            <div v-if="fileUploaded && !analysisComplete" class="flex flex-col gap-2 sm:gap-3 p-3 sm:p-4">
-            <div class="flex gap-4 sm:gap-6 justify-between">
-              <p class="text-white text-sm sm:text-base font-medium leading-normal">
-                {{ isAnalyzing ? 'Analyzing...' : 'Ready to analyze' }}
-              </p>
-              <p class="text-[#00ffff] text-xs sm:text-sm font-medium leading-normal">
-                {{ isAnalyzing ? progress + '%' : 'Click Analyze to start' }}
+            <div v-if="fileUploaded && !analysisComplete" class="flex flex-col gap-2 sm:gap-3 mt-4">
+              <div class="flex gap-4 sm:gap-6 justify-between">
+                <p class="text-white text-sm sm:text-base font-medium leading-normal">
+                  {{ isAnalyzing ? 'Analyzing...' : 'Ready to analyze' }}
+                </p>
+                <p class="text-[#00ffff] text-xs sm:text-sm font-medium leading-normal">
+                  {{ isAnalyzing ? progress + '%' : 'Click Analyze to start' }}
+                </p>
+              </div>
+              <div class="rounded bg-[#2e6b6b] h-3 sm:h-2">
+                <div 
+                  class="h-full rounded bg-[#00ffff] transition-all duration-500 ease-out" 
+                  :style="{ width: progress + '%' }"
+                ></div>
+              </div>
+              <p class="text-[#8dcece] text-xs sm:text-sm font-normal leading-normal">
+                {{ isAnalyzing ? 'This may take a few seconds' : 'Analysis will start when you click the button' }}
               </p>
             </div>
-            <div class="rounded bg-[#2e6b6b] h-3 sm:h-2">
-              <div 
-                class="h-full rounded bg-[#00ffff] transition-all duration-500 ease-out" 
-                :style="{ width: progress + '%' }"
-              ></div>
-            </div>
-            <p class="text-[#8dcece] text-xs sm:text-sm font-normal leading-normal">
-              {{ isAnalyzing ? 'This may take a few seconds' : 'Analysis will start when you click the button' }}
-            </p>
-          </div>
 
-          <div v-if="fileUploaded && !analysisComplete" class="flex px-3 sm:px-4 py-2 sm:py-3 justify-center">
-            <button
-              @click="startAnalysis"
-              :disabled="isAnalyzing"
-              class="flex min-w-[64px] sm:min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 sm:h-10 px-3 sm:px-4 bg-[#00ffff] text-[#0f2424] text-xs sm:text-sm font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              <span class="truncate">
-                {{ isAnalyzing ? 'Analyzing...' : 'Analyze' }}
-              </span>
-            </button>
-          </div>
-
-          <div v-if="analysisComplete" class="p-3 sm:p-4">
-            <div
-              class="bg-cover bg-center flex flex-col items-stretch justify-end rounded-xl pt-[100px] sm:pt-[120px] md:pt-[132px]"
-              :style="`background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 100%), url('${analysisImageUrl}');`"
-            >
-              <div 
-                class="flex w-full items-end justify-between gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg"
-                :class="analysisResult === 'AUTHENTIC' ? 'bg-white-500/20' : 'bg-white-500/20'"
+            <div v-if="fileUploaded && !analysisComplete" class="flex px-0 py-2 sm:py-3 justify-center mt-4">
+              <button
+                @click="startAnalysis"
+                :disabled="isAnalyzing"
+                class="flex min-w-[64px] sm:min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 sm:h-10 px-3 sm:px-4 bg-[#00ffff] text-[#0f2424] text-xs sm:text-sm font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                <div class="flex-1">
-                  <p 
-                    class="text-white tracking-light text-xl sm:text-2xl font-bold leading-tight"
-                    :class="analysisResult === 'AUTHENTIC' ? 'text-green-400' : 'text-red-400'"
+                <span class="truncate">
+                  {{ isAnalyzing ? 'Analyzing...' : 'Analyze' }}
+                </span>
+              </button>
+            </div>
+
+            <div v-if="analysisComplete && !showExplainability" class="p-3 sm:p-4 mt-4">
+              <div
+                class="bg-cover bg-center flex flex-col items-stretch justify-end rounded-xl pt-[100px] sm:pt-[120px] md:pt-[132px]"
+                :style="`background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 100%), url('${analysisImageUrl}');`"
+              >
+                <div 
+                  class="flex w-full items-end justify-between gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg"
+                  :class="analysisResult === 'AUTHENTIC' ? 'bg-white-500/20' : 'bg-white-500/20'"
+                >
+                  <div class="flex-1">
+                    <p 
+                      class="text-white tracking-light text-xl sm:text-2xl font-bold leading-tight"
+                      :class="analysisResult === 'AUTHENTIC' ? 'text-green-400' : 'text-red-400'"
+                    >
+                      {{ analysisResult }}
+                    </p>
+                    <p class="text-[#070808] text-sm mt-1">
+                      Confidence: {{ videoConfidence }}%
+                    </p>
+                  </div>
+                  <button
+                    @click="resetAnalysis"
+                    class="flex min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-3 bg-[#204b4b] text-white text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105"
                   >
-                    {{ analysisResult }}
-                  </p>
-                  <p class="text-[#070808] text-sm mt-1">
-                    Confidence: {{ videoConfidence }}%
-                  </p>
+                    <span class="truncate">New Analysis</span>
+                  </button>
                 </div>
+              </div>
+            </div>
+
+            <div v-if="analysisComplete && showExplainability" class="mt-6">
+              <DeepfakeExplainability :result="explainabilityResult" />
+              <div class="flex mt-6 justify-center">
                 <button
                   @click="resetAnalysis"
-                  class="flex min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-3 bg-[#204b4b] text-white text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105"
+                  class="flex min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105"
                 >
-                  <span class="truncate">New Analysis</span>
+                  <span class="truncate">Analyze Another Video</span>
                 </button>
               </div>
-              <div class="p-4">
-                <div 
-                  class="bg-[#204b4b] rounded-lg p-4"
-                  v-if="analysisResult === 'DEEPFAKE'"
-                >
-                  <h3 class="text-white text-sm font-bold mb-2">Deepfake Detection Report</h3>
-                  <ul class="text-[#8dcece] text-xs space-y-1">
-                    <li>• Facial inconsistencies detected in 72% of frames</li>
-                    <li>• Eye movement unnaturalness: high probability</li>
-                    <li>• Lighting inconsistencies detected</li>
-                    <li>• Audio-visual desynchronization noted</li>
-                  </ul>
+            </div>
+            </div>
+
+            <!-- URL Mode -->
+            <div v-show="detectionMode === 'url'" class="w-full">
+              <div class="flex flex-col gap-4">
+                <p class="text-white text-sm font-medium">Enter a video URL from supported platforms:</p>
+                <div class="flex gap-2">
+                  <input 
+                    v-model="videoUrl"
+                    type="url"
+                    placeholder="https://www.youtube.com/watch?v=... or https://www.instagram.com/p/..."
+                    class="flex-1 px-4 py-2 rounded-lg bg-[#2e6b6b] text-white placeholder-[#8dcece] border border-[#204b4b] focus:border-[#00ffff] outline-none transition-colors"
+                  />
+                  <button
+                    @click="predictFromUrl"
+                    :disabled="urlLoading || !videoUrl"
+                    class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span class="truncate">{{ urlLoading ? 'Processing...' : 'Predict' }}</span>
+                  </button>
                 </div>
-                <div 
-                  class="bg-[#173636] rounded-lg p-4"
-                  v-else
-                >
-                  <h3 class="text-white text-sm font-bold mb-2">Authenticity Verification Report</h3>
-                  <ul class="text-[#8dcece] text-xs space-y-1">
-                    <li>• No facial inconsistencies detected</li>
-                    <li>• Natural eye movement pattern confirmed</li>
-                    <li>• Lighting consistent throughout video</li>
-                    <li>• Audio-visual synchronization within normal range</li>
-                  </ul>
+              </div>
+
+              <div v-if="urlLoading" class="flex flex-col gap-3 mt-6">
+                <div class="flex gap-4 justify-between">
+                  <p class="text-white text-sm font-medium">Downloading and analyzing...</p>
+                  <p class="text-[#00ffff] text-xs font-medium">{{ progress }}%</p>
+                </div>
+                <div class="rounded bg-[#2e6b6b] h-2">
+                  <div 
+                    class="h-full rounded bg-[#00ffff] transition-all duration-500 ease-out" 
+                    :style="{ width: progress + '%' }"
+                  ></div>
+                </div>
+              </div>
+
+              <div v-if="analysisComplete && showExplainability && detectionMode === 'url'" class="mt-6">
+                <DeepfakeExplainability :result="explainabilityResult" />
+                <div class="flex mt-6 justify-center">
+                  <button
+                    @click="resetUrl"
+                    class="flex min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105"
+                  >
+                    <span class="truncate">Analyze Another URL</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -415,6 +466,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import DeepfakeExplainability from './components/DeepfakeExplainability.vue';
 
 // State variables
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -428,6 +480,16 @@ const progress = ref(0);
 const currentStep = ref(0);
 const draggedOver = ref(false);
 const analysisImageUrl = ref('');
+
+// URL Prediction
+const videoUrl = ref('');
+const urlLoading = ref(false);
+const supportedPlatforms = ref<any[]>([]);
+
+// Explainability
+const showExplainability = ref(false);
+const explainabilityResult = ref<any>(null);
+const detectionMode = ref<'upload' | 'url'>('upload');
 
 // Image upload state variables
 const imageFileInput = ref<HTMLInputElement | null>(null);
@@ -452,24 +514,29 @@ const steps = [
 const faqs = [
   {
     question: 'What types of files can I upload?',
-    answer: 'You can upload video files in MP4, AVI, and MOV formats. Ensure the file size does not exceed 100MB for optimal performance.',
+    answer: 'You can upload video files in MP4, AVI, and MOV formats. For URL detection, we support YouTube, Instagram, Facebook, TikTok, Twitter, and direct video links.',
     open: false
   },
   {
     question: 'How long does the analysis take?',
-    answer: 'Analysis typically completes within a few seconds to a minute depending on file size and hardware.',
+    answer: 'Video upload analysis typically completes within a few seconds to a minute depending on file size. URL downloads may take longer depending on video length.',
     open: false
   },
   {
     question: 'Is my data secure?',
-    answer: 'Files are processed locally in your browser for the current demo; no files are uploaded in this version.',
+    answer: 'Files are processed locally in your browser. Temporary files downloaded from URLs are deleted immediately after analysis.',
+    open: false
+  },
+  {
+    question: 'What is explainability?',
+    answer: 'The explainability feature provides detailed temporal analysis showing frame-by-frame consistency scores, anomaly detection, and cross-modal audio-video synchronization analysis.',
     open: false
   }
 ];
 
 // Methods
 const scrollToDetection = () => {
-  const detectionSection = document.querySelector('.flex.flex-col.p-3');
+  const detectionSection = document.querySelector('.border-b.border-\\[\\#2e6b6b\\]');
   if (detectionSection) {
     detectionSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
@@ -489,6 +556,7 @@ const handleFileUpload = (event: Event) => {
     progress.value = 0;
     analysisComplete.value = false;
     analysisResult.value = 'AUTHENTIC';
+    showExplainability.value = false;
   }
 };
 
@@ -512,6 +580,7 @@ const resetUpload = () => {
   analysisComplete.value = false;
   currentStep.value = 0;
   videoConfidence.value = 0;
+  showExplainability.value = false;
 };
 
 const startAnalysis = async () => {
@@ -525,8 +594,8 @@ const startAnalysis = async () => {
     const form = new FormData();
     form.append('file', file.value as Blob, (file.value as File).name);
 
-    // POST to backend
-    const resp = await fetch('http://localhost:8001/predict', {
+    // POST to backend with explainability
+    const resp = await fetch('http://localhost:8001/predict-explain', {
       method: 'POST',
       body: form,
     });
@@ -538,17 +607,17 @@ const startAnalysis = async () => {
 
     progress.value = 80;
     const data = await resp.json();
-    console.log('Backend response:', data); // Debug log
+    console.log('Backend response:', data);
     const result = data?.result ?? data;
 
-    // Backend returns: { status: "ok", result: { label, score, confidence, filename } }
-    // where confidence is already a percentage (e.g., 72.56)
-    const label = result?.label ?? 'AUTHENTIC';
-    const confidence = result?.confidence ?? 0;
+    const label = result?.prediction?.label ?? result?.label ?? 'AUTHENTIC';
+    const confidence = result?.prediction?.score ?? result?.confidence ?? result?.score ?? 0;
     analysisResult.value = label === 'DEEPFAKE' ? 'DEEPFAKE' : 'AUTHENTIC';
-    videoConfidence.value = Math.round(confidence);
+    videoConfidence.value = Math.round(confidence * 100);
 
-    // optional: show a different image per result
+    // Store explainability data
+    explainabilityResult.value = result;
+
     if (analysisResult.value === 'AUTHENTIC') {
       analysisImageUrl.value = "https://lh3.googleusercontent.com/aida-public/AB6AXuBWykGhzIhAAROV41C5B3xoquJD9m81hBvD8p1gT6EhIjDdIGG9gev_yvHpgEF_RNke8_0jE2zdQo_Uj1hBPHwFiVdcwwt4VZJZzWzzf8CZPDjye1RT59yI_qUNXWyDiqcO7Beca8C6nkZOQkzTIqPBBu1P5sxTHIHPWqv8EH68Sf1mcEVy1W0U_sOz3oDl-91RMe4WHCc56ROdbJ5J-i-rgM7sp56j69mJry4mR5Xau4klNDx1yBGegqPrp-ddQFjMe_a5Ibde2pk";
     } else {
@@ -557,6 +626,7 @@ const startAnalysis = async () => {
 
     progress.value = 100;
     analysisComplete.value = true;
+    showExplainability.value = true;
   } catch (err: any) {
     console.error(err);
     alert('Analysis failed: ' + (err?.message ?? err));
@@ -567,10 +637,56 @@ const startAnalysis = async () => {
   }
 };
 
-const completeAnalysis = () => {
-  // kept for compatibility; analysis result is set in startAnalysis
-  isAnalyzing.value = false;
-  analysisComplete.value = true;
+const predictFromUrl = async () => {
+  if (!videoUrl.value) {
+    alert('Please enter a video URL');
+    return;
+  }
+
+  urlLoading.value = true;
+  analysisComplete.value = false;
+  progress.value = 10;
+
+  try {
+    const resp = await fetch('http://localhost:8001/predict-url-explain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: videoUrl.value })
+    });
+
+    if (!resp.ok) {
+      const txt = await resp.text();
+      throw new Error(`Server error: ${resp.status} ${txt}`);
+    }
+
+    progress.value = 80;
+    const data = await resp.json();
+    console.log('URL prediction response:', data);
+    const result = data?.result ?? data;
+
+    const label = result?.prediction?.label ?? result?.label ?? 'AUTHENTIC';
+    const confidence = result?.prediction?.score ?? result?.confidence ?? result?.score ?? 0;
+    analysisResult.value = label === 'DEEPFAKE' ? 'DEEPFAKE' : 'AUTHENTIC';
+    videoConfidence.value = Math.round(confidence * 100);
+
+    explainabilityResult.value = result;
+
+    if (analysisResult.value === 'AUTHENTIC') {
+      analysisImageUrl.value = "https://lh3.googleusercontent.com/aida-public/AB6AXuBWykGhzIhAAROV41C5B3xoquJD9m81hBvD8p1gT6EhIjDdIGG9gev_yvHpgEF_RNke8_0jE2zdQo_Uj1hBPHwFiVdcwwt4VZJZzWzzf8CZPDjye1RT59yI_qUNXWyDiqcO7Beca8C6nkZOQkzTIqPBBu1P5sxTHIHPWqv8EH68Sf1mcEVy1W0U_sOz3oDl-91RMe4WHCc56ROdbJ5J-i-rgM7sp56j69mJry4mR5Xau4klNDx1yBGegqPrp-ddQFjMe_a5Ibde2pk";
+    } else {
+      analysisImageUrl.value = "https://lh3.googleusercontent.com/aida-public/AB6AXuBWykGhzIhAAROV41C5B3xoquJD9m81hBvD8p1gT6EhIjDdIGG9gev_yvHpgEF_RNke8_0jE2zdQo_Uj1hBPHwFiVdcwwt4VZJZzWzzf8CZPDjye1RT59yI_qUNXWyDiqcO7Beca8C6nkZOQkzTIqPBBu1P5sxTHIHPWqv8EH68Sf1mcEVy1W0U_sOz3oDl-91RMe4WHCc56ROdbJ5J-i-rgM7sp56j69mJry4mR5Xau4klNDx1yBGegqPrp-ddQFjMe_a5Ibde2pk";
+    }
+
+    progress.value = 100;
+    analysisComplete.value = true;
+    showExplainability.value = true;
+  } catch (err: any) {
+    console.error(err);
+    alert('URL prediction failed: ' + (err?.message ?? err));
+    progress.value = 0;
+  } finally {
+    urlLoading.value = false;
+  }
 };
 
 const resetAnalysis = () => {
@@ -578,6 +694,17 @@ const resetAnalysis = () => {
   progress.value = 0;
   currentStep.value = 0;
   videoConfidence.value = 0;
+  showExplainability.value = false;
+  explainabilityResult.value = null;
+};
+
+const resetUrl = () => {
+  videoUrl.value = '';
+  analysisComplete.value = false;
+  progress.value = 0;
+  videoConfidence.value = 0;
+  showExplainability.value = false;
+  explainabilityResult.value = null;
 };
 
 // Image upload methods
@@ -596,7 +723,6 @@ const handleImageFileUpload = (event: Event) => {
     imageAnalysisComplete.value = false;
     imageAnalysisResult.value = 'AUTHENTIC';
     
-    // Create preview URL
     const reader = new FileReader();
     reader.onload = (e) => {
       imagePreviewUrl.value = e.target?.result as string;
@@ -618,7 +744,6 @@ const handleImageDrop = (event: DragEvent) => {
       imageAnalysisComplete.value = false;
       imageAnalysisResult.value = 'AUTHENTIC';
       
-      // Create preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
         imagePreviewUrl.value = e.target?.result as string;
@@ -648,7 +773,6 @@ const startImageAnalysis = async () => {
     const form = new FormData();
     form.append('file', image.value as Blob, (image.value as File).name);
 
-    // POST to the image backend (adjust port if needed)
     const resp = await fetch('http://localhost:8000/predict', {
       method: 'POST',
       body: form,
@@ -661,10 +785,9 @@ const startImageAnalysis = async () => {
 
     imageProgress.value = 60;
     const data = await resp.json();
-    console.log('Image backend response:', data); // Debug log
+    console.log('Image backend response:', data);
     const result = data?.result ?? data;
     
-    // Backend returns: { status: "ok", result: { label, score, confidence, filename } }
     const label = result?.label ?? 'AUTHENTIC';
     const confidence = result?.confidence ?? 0;
 

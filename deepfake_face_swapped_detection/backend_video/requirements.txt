@@ -6,3 +6,6 @@ torchaudio
 torchvision
 opencv-python
 numpy
+yt-dlp
+requests
+pydantic

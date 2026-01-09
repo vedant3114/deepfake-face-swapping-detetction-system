@@ -39,6 +39,8 @@ class AudioFeatureExtractor(nn.Module):
         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
+        # --- FIX: Register as buffer for proper device handling ---
+        self.register_buffer('_pe', pe.unsqueeze(0), persistent=False)
         return pe.unsqueeze(0)
 
     def forward(self, audio_input):
@@ -46,6 +48,7 @@ class AudioFeatureExtractor(nn.Module):
         audio_reshaped = audio_input.reshape(-1, 1, n_mels, time_frames)
         conv_features = self.conv_layers(audio_reshaped).reshape(-1, self.temporal_dim)
         temporal_features = self.temporal_projection(conv_features).reshape(batch_size, seq_len, -1)
+        # --- FIX: Use device-aware positional encoding ---
         pos_encoding = self.positional_encoding[:, :seq_len, :].to(audio_input.device)
         output_features = self.output_projection(self.transformer_encoder(temporal_features + pos_encoding))
         return output_features
@@ -105,6 +108,7 @@ class VideoFeatureExtractor(nn.Module):
         pooled_features = self.adaptive_pool(attended_features)
         flattened = pooled_features.reshape(-1, self.spatial_dim)
         temporal_features = self.temporal_projection(flattened).reshape(batch_size, seq_len, -1)
+        # --- FIX: Use device-aware positional encoding ---
         pos_encoding = self.positional_encoding[:, :seq_len, :].to(video_input.device)
         return self.output_projection(self.transformer_encoder(temporal_features + pos_encoding))
 
