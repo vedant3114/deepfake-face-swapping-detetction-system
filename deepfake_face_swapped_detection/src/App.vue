@@ -113,13 +113,21 @@
               class="bg-cover bg-center flex flex-col items-stretch justify-end rounded-xl pt-[100px] sm:pt-[120px] md:pt-[132px]"
               :style="`background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0) 100%), url('${analysisImageUrl}');`"
             >
-              <div class="flex w-full items-end justify-between gap-2 sm:gap-4 p-3 sm:p-4">
-                <p 
-                  class="text-white tracking-light text-xl sm:text-2xl font-bold leading-tight flex-1"
-                  :class="analysisResult === 'AUTHENTIC' ? 'text-green-400' : 'text-red-400'"
-                >
-                  {{ analysisResult }}
-                </p>
+              <div 
+                class="flex w-full items-end justify-between gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg"
+                :class="analysisResult === 'AUTHENTIC' ? 'bg-white-500/20' : 'bg-white-500/20'"
+              >
+                <div class="flex-1">
+                  <p 
+                    class="text-white tracking-light text-xl sm:text-2xl font-bold leading-tight"
+                    :class="analysisResult === 'AUTHENTIC' ? 'text-green-400' : 'text-red-400'"
+                  >
+                    {{ analysisResult }}
+                  </p>
+                  <p class="text-[#070808] text-sm mt-1">
+                    Confidence: {{ videoConfidence }}%
+                  </p>
+                </div>
                 <button
                   @click="resetAnalysis"
                   class="flex min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-3 bg-[#204b4b] text-white text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105"
@@ -415,6 +423,7 @@ const fileUploaded = ref(false);
 const isAnalyzing = ref(false);
 const analysisComplete = ref(false);
 const analysisResult = ref<'AUTHENTIC' | 'DEEPFAKE'>('AUTHENTIC');
+const videoConfidence = ref(0);
 const progress = ref(0);
 const currentStep = ref(0);
 const draggedOver = ref(false);
@@ -502,6 +511,7 @@ const resetUpload = () => {
   progress.value = 0;
   analysisComplete.value = false;
   currentStep.value = 0;
+  videoConfidence.value = 0;
 };
 
 const startAnalysis = async () => {
@@ -516,7 +526,7 @@ const startAnalysis = async () => {
     form.append('file', file.value as Blob, (file.value as File).name);
 
     // POST to backend
-    const resp = await fetch('http://localhost:8000/predict', {
+    const resp = await fetch('http://localhost:8001/predict', {
       method: 'POST',
       body: form,
     });
@@ -528,11 +538,15 @@ const startAnalysis = async () => {
 
     progress.value = 80;
     const data = await resp.json();
+    console.log('Backend response:', data); // Debug log
     const result = data?.result ?? data;
 
-    // Accept multiple shapes from backend
-    const label = result?.label ?? (result === 'DEEPFAKE' ? 'DEEPFAKE' : 'AUTHENTIC');
+    // Backend returns: { status: "ok", result: { label, score, confidence, filename } }
+    // where confidence is already a percentage (e.g., 72.56)
+    const label = result?.label ?? 'AUTHENTIC';
+    const confidence = result?.confidence ?? 0;
     analysisResult.value = label === 'DEEPFAKE' ? 'DEEPFAKE' : 'AUTHENTIC';
+    videoConfidence.value = Math.round(confidence);
 
     // optional: show a different image per result
     if (analysisResult.value === 'AUTHENTIC') {
@@ -563,6 +577,7 @@ const resetAnalysis = () => {
   analysisComplete.value = false;
   progress.value = 0;
   currentStep.value = 0;
+  videoConfidence.value = 0;
 };
 
 // Image upload methods
@@ -634,7 +649,7 @@ const startImageAnalysis = async () => {
     form.append('file', image.value as Blob, (image.value as File).name);
 
     // POST to the image backend (adjust port if needed)
-    const resp = await fetch('http://localhost:8001/predict', {
+    const resp = await fetch('http://localhost:8000/predict', {
       method: 'POST',
       body: form,
     });
@@ -646,13 +661,15 @@ const startImageAnalysis = async () => {
 
     imageProgress.value = 60;
     const data = await resp.json();
-    // backend returns { status: 'ok', result: { label, score } }
+    console.log('Image backend response:', data); // Debug log
     const result = data?.result ?? data;
-    const label = result?.label ?? (result === 'DEEPFAKE' ? 'DEEPFAKE' : 'AUTHENTIC');
-    const score = typeof result?.score === 'number' ? result.score : (result?.score ? Number(result.score) : 0);
+    
+    // Backend returns: { status: "ok", result: { label, score, confidence, filename } }
+    const label = result?.label ?? 'AUTHENTIC';
+    const confidence = result?.confidence ?? 0;
 
     imageAnalysisResult.value = label === 'DEEPFAKE' ? 'DEEPFAKE' : 'AUTHENTIC';
-    imageConfidence.value = Math.round((Number.isFinite(score) ? score : 0) * 100);
+    imageConfidence.value = Math.round(confidence);
 
     imageProgress.value = 100;
     imageAnalysisComplete.value = true;
