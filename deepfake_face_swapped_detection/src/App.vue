@@ -770,10 +770,12 @@ const startImageAnalysis = async () => {
   imageAnalysisComplete.value = false;
 
   try {
-    const form = new FormData();
-    form.append('file', image.value as Blob, (image.value as File).name);
+    const file = image.value;
 
-    const resp = await fetch('http://localhost:8000/predict', {
+    const form = new FormData();
+    form.append('file', file);
+
+    const resp = await fetch('https://raturishivaay-deepfakeapinew.hf.space/predict', {
       method: 'POST',
       body: form,
     });
@@ -786,13 +788,53 @@ const startImageAnalysis = async () => {
     imageProgress.value = 60;
     const data = await resp.json();
     console.log('Image backend response:', data);
-    const result = data?.result ?? data;
-    
-    const label = result?.label ?? 'AUTHENTIC';
-    const confidence = result?.confidence ?? 0;
 
-    imageAnalysisResult.value = label === 'DEEPFAKE' ? 'DEEPFAKE' : 'AUTHENTIC';
-    imageConfidence.value = Math.round(confidence);
+    // Robust parsing to handle different API response formats (result, data[], top-level label, HF spaces, etc.)
+    function parsePrediction(resp) {
+      const candidate = resp?.result ?? resp;
+
+      // 1) Top-level object with label/score/confidence
+      if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) {
+        if (candidate.label) {
+          return { rawLabel: String(candidate.label), rawConfidence: candidate.confidence ?? candidate.score ?? candidate.confidence_percent ?? candidate.score_percent ?? 0 };
+        }
+      }
+
+      // 2) HuggingFace / Gradio style: { data: [{ label, score }] }
+      if (Array.isArray(resp?.data) && resp.data.length > 0 && resp.data[0].label) {
+        const it = resp.data[0];
+        return { rawLabel: String(it.label), rawConfidence: it.score ?? it.confidence ?? 0 };
+      }
+
+      // 3) result is an array like [{label, score}, ...]
+      if (Array.isArray(candidate) && candidate.length > 0 && candidate[0].label) {
+        const it = candidate[0];
+        return { rawLabel: String(it.label), rawConfidence: it.score ?? it.confidence ?? 0 };
+      }
+
+      // 4) predictions/predictions[0]
+      if (Array.isArray(resp?.predictions) && resp.predictions.length > 0) {
+        const it = resp.predictions[0];
+        return { rawLabel: it.label ? String(it.label) : String(it[0] ?? 'AUTHENTIC'), rawConfidence: it.score ?? it.confidence ?? 0 };
+      }
+
+      // fallback
+      return { rawLabel: 'AUTHENTIC', rawConfidence: 0 };
+    }
+
+    const parsed = parsePrediction(data);
+    const rawLabel = (parsed.rawLabel ?? 'AUTHENTIC').toString().toUpperCase();
+    let rawConfidence = Number(parsed.rawConfidence ?? 0);
+
+    // Normalize confidence: if in 0..1 convert to percent
+    if (rawConfidence <= 1) rawConfidence = Math.round(rawConfidence * 100);
+    // If already in 0..100, keep as is
+
+    // Map multiple label variants to AUTHENTIC / DEEPFAKE
+    const isDeepfake = /DEEP|FAKE|FAKES|SPOOF|TOO|1|TRUE/i.test(rawLabel) && !/REAL|AUTHENTIC|GENUINE|TRUE_NEGATIVE/i.test(rawLabel);
+
+    imageAnalysisResult.value = isDeepfake ? 'DEEPFAKE' : 'AUTHENTIC';
+    imageConfidence.value = Math.min(100, Math.max(0, Math.round(rawConfidence)));
 
     imageProgress.value = 100;
     imageAnalysisComplete.value = true;
