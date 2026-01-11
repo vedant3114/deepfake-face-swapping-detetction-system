@@ -5,7 +5,8 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Use teal app background; html/body will own the paint */
+  background-color: #0f2424;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -23,11 +24,11 @@ a:hover {
 }
 
 body {
-  margin: 100px;
-  display: flex;
-  place-items: center;
+  margin: 0;
+  display: block;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #0f2424;
 }
 
 h1 {
@@ -59,16 +60,17 @@ button:focus-visible {
 }
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  text-align: initial;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
-    background-color: #ffffff;
+    /* Keep body background teal; do not override page bg here */
   }
   a:hover {
     color: #747bff;
@@ -76,4 +78,34 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Main content wrapper: scrollable over fixed Vanta background */
+#app > div:first-child {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }

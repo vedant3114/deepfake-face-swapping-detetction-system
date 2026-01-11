@@ -1,16 +1,15 @@
 <template>
   <div
-    class="relative flex h-auto min-h-screen w-full flex-col bg-[#0f2424] dark group/design-root overflow-x-hidden"
+    class="relative flex h-auto min-h-screen w-full flex-col dark group/design-root overflow-x-hidden"
     style='font-family: "Space Grotesk", "Noto Sans", sans-serif;'
   >
-    <div class="layout-container flex h-full grow flex-col">
-      <div class="px-4 sm:px-6 md:px-10 lg:px-20 xl:px-40 flex flex-1 justify-center py-3 sm:py-5">
-        <div class="layout-content-container flex flex-col max-w-[960px] w-full flex-1">
-          <div>
-            <div class="sm:p-4">
+    <!-- Uniform wrapper: centers all content with consistent width/padding -->
+    <div class="w-full flex justify-center">
+      <div class="w-full max-w-[1200px] px-4 sm:px-6 flex flex-col flex-1 py-3 sm:py-5">
+        <div>
+          <div class="sm:p-4">
               <div
-                class="flex min-h-[200px] sm:min-h-[280px] md:min-h-[320px] lg:min-h-[400px] xl:min-h-[480px] flex-col gap-4 sm:gap-6 md:gap-8 bg-contain sm:bg-cover bg-center bg-no-repeat sm:gap-8 sm:rounded-xl items-center justify-center p-3 sm:p-4 md:p-6 mobile-bg-contain"
-                style='background-image: linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuCqtijFadhSaZhtasCkpaPDDRdOW91-laIe8GfEf62qPQbqm8AzfzFxw56yJFa1i2niLVzzcxMEDLvMIhwy0rySBS53xp1UIzCo2TNosDNqxaSRjh3NJLH48UgzdoZMQk-xkF6XIkLAhx-tKkJQDZkUv683h1wnbPZUWuiq08TQkBAlqUZebQ-Qm7caXuKLmZxKkJn0qbXxqKSti8-o6swFufsxNx2FWxtJYS2_uJ4xpjp3LeMSwS_LLZjxciP0eUwKF9WqsmwSjGo");'
+                class="flex min-h-[200px] sm:min-h-[280px] md:min-h-[320px] lg:min-h-[400px] xl:min-h-[480px] flex-col gap-4 sm:gap-6 md:gap-8 sm:rounded-xl items-center justify-center p-3 sm:p-4 md:p-6"
               >
                 <h1
                   class="text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black leading-tight tracking-[-0.033em] sm:text-5xl text-center px-2 sm:px-4"
@@ -27,10 +26,10 @@
             </div>
           </div>
 
-          <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 md:px-6 pb-2 sm:pb-3 pt-3 sm:pt-5">Detection Tool</h2>
+          <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-2 sm:pb-3 pt-3 sm:pt-5">Detection Tool</h2>
 
           <!-- Detection Mode Tabs -->
-          <div class="flex gap-2 sm:gap-4 px-3 sm:px-4 py-2 border-b border-[#2e6b6b]">
+          <div class="flex gap-2 sm:gap-4 py-2 border-b border-[#2e6b6b]">
             <button
               @click="detectionMode = 'upload'"
               :class="['px-3 sm:px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200', detectionMode === 'upload' ? 'bg-[#00ffff] text-[#0f2424]' : 'text-[#8dcece] hover:text-white']"
@@ -216,7 +215,7 @@
           </div>
 
           <!-- Image Upload Section -->
-          <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 md:px-6 pb-2 sm:pb-3 pt-6 sm:pt-8">Image Upload</h2>
+          <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-2 sm:pb-3 pt-6 sm:pt-8">Image Upload</h2>
 
           <div class="flex flex-col p-3 sm:p-4">
             <div 
@@ -299,7 +298,7 @@
             </p>
           </div>
 
-          <div v-if="imageUploaded && !imageAnalysisComplete" class="flex px-3 sm:px-4 py-2 sm:py-3 justify-center">
+          <div v-if="imageUploaded && !imageAnalysisComplete" class="flex py-2 sm:py-3 justify-center">
             <button
               @click="startImageAnalysis"
               :disabled="isImageAnalyzing"
@@ -364,7 +363,7 @@
             </div>
           </div>
 
-          <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 md:px-6 pb-2 sm:pb-3 pt-3 sm:pt-5">How It Works</h2>
+          <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-2 sm:pb-3 pt-3 sm:pt-5">How It Works</h2>
 
           <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2 sm:gap-3 p-3 sm:p-4">
             <div 
@@ -394,7 +393,7 @@
             </div>
           </div>
 
-          <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 md:px-6 pb-2 sm:pb-3 pt-3 sm:pt-5">Why Choose Us</h2>
+          <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-2 sm:pb-3 pt-3 sm:pt-5">Why Choose Us</h2>
           <div class="flex flex-wrap gap-3 sm:gap-4 p-3 sm:p-4">
             <div class="flex min-w-[140px] flex-1 flex-col gap-2 rounded-xl p-4 sm:p-6 bg-[#204b4b] transition-all duration-300 hover:scale-105">
               <p class="text-white text-sm sm:text-base font-medium leading-normal">F1-Score</p>
@@ -410,9 +409,9 @@
             </div>
           </div>
 
-          <p class="text-white text-sm sm:text-base font-normal leading-normal pb-3 sm:pb-5 pt-2 sm:pt-3 px-3 sm:px-4 text-center">Audio-Visual Synchronization Analysis</p>
+          <p class="text-white text-sm sm:text-base font-normal leading-normal pb-3 sm:pb-5 pt-2 sm:pt-3 text-center">Audio-Visual Synchronization Analysis</p>
 
-          <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] px-3 sm:px-4 md:px-6 pb-2 sm:pb-3 pt-3 sm:pt-5">Frequently Asked Questions</h2>
+          <h2 class="text-white text-[18px] sm:text-[20px] md:text-[22px] font-bold leading-tight tracking-[-0.015em] pb-2 sm:pb-3 pt-3 sm:pt-5">Frequently Asked Questions</h2>
           <div class="flex flex-col p-3 sm:p-4 gap-2 sm:gap-3">
             <details 
               v-for="(faq, index) in faqs" 
@@ -458,15 +457,38 @@
             </div>
             <p class="text-[#8dcece] text-xs sm:text-base font-normal leading-normal">© 2025 Deepfake Detector. All rights reserved.</p>
           </footer>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import DeepfakeExplainability from './components/DeepfakeExplainability.vue';
+
+// Vanta.NET background initialization
+onMounted(() => {
+  // Declare the global VANTA object from CDN
+  const VANTA = (window as any).VANTA;
+  if (VANTA) {
+    VANTA.NET({
+      el: '#app',
+      mouseControls: true,
+      touchControls: true,
+      gyroControls: false,
+      minHeight: 200.00,
+      minWidth: 200.00,
+      scale: 1.00,
+      scaleMobile: 1.00,
+      color: 0xff3f81,       // Pink/magenta net color
+      backgroundColor: 0x23153c,  // Dark purple background
+      points: 10,
+      maxDistance: 20,
+      spacing: 15,
+      showDots: true
+    });
+  }
+});
 
 // State variables
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -857,20 +879,23 @@ const resetImageAnalysis = () => {
 };
 </script>
 
-<style scoped>
-/* Additional mobile-first styles */
-.layout-content-container { 
+<style>
+/* Global full-screen reset */
+html, body, #app {
   width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-/* Ensure proper scrolling on mobile */
+body {
+  background-color: #0f2424;
+}
+</style>
+
+<style scoped>
+/* Ensure hero background is contained on small screens to avoid cropping important text */
 @media (max-width: 640px) {
-  .layout-content-container {
-    padding: 0 10px;
-  }
-  /* Ensure hero background is contained on small screens to avoid cropping important text */
   .mobile-bg-contain {
     background-size: contain !important;
     background-position: center !important;
