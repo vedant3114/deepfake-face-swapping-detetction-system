@@ -1,11 +1,23 @@
 <template>
-  <div class="explainability-container">
+  <div class="explainability-container cyber-explainability">
+    <!-- Cyber Header -->
+    <div class="cyber-header">
+      <div class="cyber-title">
+        <i class="fas fa-shield-alt"></i>
+        <span>DEEPFAKE ANALYSIS REPORT</span>
+      </div>
+      <div class="status-indicators">
+        <div class="status-dot" :class="getStatusClass()"></div>
+        <span class="status-text">{{ getStatusText() }}</span>
+      </div>
+    </div>
+
     <!-- Tab Navigation -->
-    <div class="tabs-header">
-      <button 
-        v-for="tab in tabs" 
+    <div class="tabs-header cyber-tabs">
+      <button
+        v-for="tab in tabs"
         :key="tab.id"
-        :class="['tab-btn', { active: activeTab === tab.id }]"
+        :class="['tab-btn cyber-tab', { active: activeTab === tab.id }]"
         @click="activeTab = tab.id"
       >
         <i :class="tab.icon"></i>
@@ -14,66 +26,70 @@
     </div>
 
     <!-- Tab Content -->
-    <div class="tabs-content">
+    <div class="tabs-content cyber-content">
       <!-- 1. Prediction Summary Tab -->
       <div v-show="activeTab === 'summary'" class="tab-pane">
-        <div class="prediction-card">
-          <div :class="['prediction-badge', prediction.label.toLowerCase()]">
-            {{ prediction.label }}
+        <div class="prediction-card cyber-card">
+          <div class="prediction-header">
+            <h3>📊 PREDICTION SUMMARY</h3>
+            <div :class="['prediction-badge cyber-badge', prediction.label.toLowerCase()]">
+              {{ prediction.label }}
+            </div>
           </div>
+
           <div class="prediction-details">
             <div class="detail-row">
-              <span class="label">Confidence Score:</span>
+              <span class="label">CONFIDENCE SCORE:</span>
               <span class="value">{{ (prediction.score * 100).toFixed(2) }}%</span>
             </div>
             <div class="detail-row">
-              <span class="label">Risk Level:</span>
-              <span :class="['risk-badge', getRiskLevel(prediction.score)]">
+              <span class="label">RISK LEVEL:</span>
+              <span :class="['risk-badge cyber-risk', getRiskLevel(prediction.score)]">
                 {{ getRiskLevel(prediction.score) }}
               </span>
             </div>
             <div class="detail-row">
-              <span class="label">Analysis Type:</span>
-              <span class="value">Multi-Modal (Audio + Video)</span>
+              <span class="label">ANALYSIS TYPE:</span>
+              <span class="value">MULTI-MODAL (AUDIO + VIDEO)</span>
             </div>
           </div>
         </div>
 
         <!-- Global Consistency Scores -->
-        <div class="consistency-summary">
-          <h3>📊 Global Consistency Scores</h3>
+        <div class="consistency-summary cyber-section">
+          <h3>📊 GLOBAL CONSISTENCY SCORES</h3>
           <div class="consistency-grid">
-            <div class="consistency-item audio">
-              <i class="fas fa-volume-up"></i>
-              <div class="consistency-info">
-                <span class="name">Audio Consistency</span>
-                <div class="bar-container">
-                  <div class="bar" :style="{ width: consistency.audio * 100 + '%' }"></div>
-                </div>
-                <span class="score">{{ (consistency.audio * 100).toFixed(1) }}%</span>
+            <div class="consistency-item audio cyber-item">
+              <div class="item-header">
+                <i class="fas fa-volume-up"></i>
+                <span class="name">AUDIO CONSISTENCY</span>
               </div>
+              <div class="bar-container cyber-bar">
+                <div class="bar" :style="{ width: consistency.audio * 100 + '%' }"></div>
+              </div>
+              <span class="score">{{ (consistency.audio * 100).toFixed(1) }}%</span>
             </div>
 
-            <div class="consistency-item video">
-              <i class="fas fa-video"></i>
-              <div class="consistency-info">
-                <span class="name">Video Consistency</span>
-                <div class="bar-container">
-                  <div class="bar" :style="{ width: consistency.video * 100 + '%' }"></div>
-                </div>
-                <span class="score">{{ (consistency.video * 100).toFixed(1) }}%</span>
+            <div class="consistency-item video cyber-item">
+              <div class="item-header">
+                <i class="fas fa-video"></i>
+                <span class="name">VIDEO CONSISTENCY</span>
               </div>
+              <div class="bar-container cyber-bar">
+                <div class="bar" :style="{ width: consistency.video * 100 + '%' }"></div>
+              </div>
+              <span class="score">{{ (consistency.video * 100).toFixed(1) }}%</span>
             </div>
 
-            <div class="consistency-item cross">
-              <i class="fas fa-link"></i>
-              <div class="consistency-info">
-                <span class="name">Cross-Modal Consistency</span>
-                <div class="bar-container">
-                  <div class="bar" :style="{ width: consistency.cross_modal * 100 + '%' }"></div>
-                </div>
-                <span class="score">{{ (consistency.cross_modal * 100).toFixed(1) }}%</span>
+            <div class="consistency-item cross cyber-item">
+              <div class="item-header">
+                <i class="fas fa-link"></i>
+                <span class="name">CROSS-MODAL CONSISTENCY</span>
               </div>
+              <div class="bar-container cyber-bar">
+                <div class="bar" :style="{ width: consistency.cross_modal * 100 + '%' }"></div>
+              </div>
+              <span class="score">{{ (consistency.cross_modal * 100).toFixed(1) }}%</span>
             </div>
           </div>
         </div>
@@ -81,37 +97,37 @@
 
       <!-- 2. Temporal Analysis Tab -->
       <div v-show="activeTab === 'temporal'" class="tab-pane">
-        <div class="temporal-container">
-          <h3>⏱️ Temporal Consistency Analysis</h3>
+        <div class="temporal-container cyber-section">
+          <h3>⏱️ TEMPORAL CONSISTENCY ANALYSIS</h3>
           <p class="description">
-            Detects inconsistencies across video frames. Lower values indicate potential manipulation.
+            DETECTS INCONSISTENCIES ACROSS VIDEO FRAMES. LOWER VALUES INDICATE POTENTIAL MANIPULATION.
           </p>
 
           <!-- Audio Temporal -->
-          <div class="temporal-section">
+          <div class="temporal-section cyber-subsection">
             <div class="section-header">
-              <h4>🔊 Audio Temporal Consistency</h4>
+              <h4>🔊 AUDIO TEMPORAL CONSISTENCY</h4>
               <span class="anomaly-count" v-if="anomalies.audio > 0">
-                {{ anomalies.audio }} anomalies detected
+                {{ anomalies.audio }} ANOMALIES DETECTED
               </span>
             </div>
-            <canvas ref="audioChart" class="temporal-chart"></canvas>
+            <canvas ref="audioChart" class="temporal-chart cyber-chart"></canvas>
             <p class="chart-desc">
-              Red zones indicate frame-to-frame inconsistencies in audio patterns
+              RED ZONES INDICATE FRAME-TO-FRAME INCONSISTENCIES IN AUDIO PATTERNS
             </p>
           </div>
 
           <!-- Video Temporal -->
-          <div class="temporal-section">
+          <div class="temporal-section cyber-subsection">
             <div class="section-header">
-              <h4>🎬 Video Temporal Consistency</h4>
+              <h4>🎬 VIDEO TEMPORAL CONSISTENCY</h4>
               <span class="anomaly-count" v-if="anomalies.video > 0">
-                {{ anomalies.video }} anomalies detected
+                {{ anomalies.video }} ANOMALIES DETECTED
               </span>
             </div>
-            <canvas ref="videoChart" class="temporal-chart"></canvas>
+            <canvas ref="videoChart" class="temporal-chart cyber-chart"></canvas>
             <p class="chart-desc">
-              Red zones indicate frame-to-frame inconsistencies in visual patterns
+              RED ZONES INDICATE FRAME-TO-FRAME INCONSISTENCIES IN VISUAL PATTERNS
             </p>
           </div>
         </div>
@@ -119,55 +135,70 @@
 
       <!-- 3. Anomaly Detection Tab -->
       <div v-show="activeTab === 'anomalies'" class="tab-pane">
-        <div class="anomaly-container">
-          <h3>🔍 Anomaly Detection Report</h3>
-          
-          <div class="severity-indicator" :class="severity.toLowerCase()">
+        <div class="anomaly-container cyber-section">
+          <h3>🔍 ANOMALY DETECTION REPORT</h3>
+
+          <div class="severity-indicator cyber-severity" :class="severity.toLowerCase()">
             <i :class="severityIcon"></i>
             <div class="severity-info">
-              <span class="label">Overall Severity:</span>
+              <span class="label">OVERALL SEVERITY:</span>
               <span class="value">{{ severity }}</span>
             </div>
           </div>
 
           <div class="anomaly-stats">
-            <div class="stat-card audio">
-              <h4>Audio Anomalies</h4>
+            <div class="stat-card audio cyber-stat">
+              <div class="stat-header">
+                <i class="fas fa-volume-up"></i>
+                <h4>AUDIO ANOMALIES</h4>
+              </div>
               <div class="count">{{ anomalies.audio }}</div>
-              <p v-if="anomalies.audio === 0">✓ No inconsistencies found</p>
-              <p v-else>Detected at {{ anomalies.audio_indices.length > 0 ? 'multiple frames' : '' }}</p>
+              <p v-if="anomalies.audio === 0">✓ NO INCONSISTENCIES FOUND</p>
+              <p v-else>DETECTED AT {{ anomalies.audio_indices.length > 0 ? 'MULTIPLE FRAMES' : '' }}</p>
             </div>
 
-            <div class="stat-card video">
-              <h4>Video Anomalies</h4>
+            <div class="stat-card video cyber-stat">
+              <div class="stat-header">
+                <i class="fas fa-video"></i>
+                <h4>VIDEO ANOMALIES</h4>
+              </div>
               <div class="count">{{ anomalies.video }}</div>
-              <p v-if="anomalies.video === 0">✓ No inconsistencies found</p>
-              <p v-else>Detected at {{ anomalies.video_indices.length > 0 ? 'multiple frames' : '' }}</p>
+              <p v-if="anomalies.video === 0">✓ NO INCONSISTENCIES FOUND</p>
+              <p v-else>DETECTED AT {{ anomalies.video_indices.length > 0 ? 'MULTIPLE FRAMES' : '' }}</p>
             </div>
 
-            <div class="stat-card combined">
-              <h4>Total Issues</h4>
+            <div class="stat-card combined cyber-stat">
+              <div class="stat-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h4>TOTAL ISSUES</h4>
+              </div>
               <div class="count">{{ anomalies.audio + anomalies.video }}</div>
-              <p>Across temporal sequence</p>
+              <p>ACROSS TEMPORAL SEQUENCE</p>
             </div>
           </div>
 
           <!-- Anomaly Indices -->
           <div v-if="anomalies.audio_indices.length > 0 || anomalies.video_indices.length > 0" class="anomaly-details">
-            <div v-if="anomalies.audio_indices.length > 0" class="anomaly-list audio">
-              <h4>🔊 Audio Anomaly Frames</h4>
+            <div v-if="anomalies.audio_indices.length > 0" class="anomaly-list audio cyber-anomaly-list">
+              <div class="list-header">
+                <i class="fas fa-volume-up"></i>
+                <h4>🔊 AUDIO ANOMALY FRAMES</h4>
+              </div>
               <div class="frame-list">
-                <span v-for="idx in anomalies.audio_indices" :key="'a-' + idx" class="frame-badge">
-                  Frame {{ idx }}
+                <span v-for="idx in anomalies.audio_indices" :key="'a-' + idx" class="frame-badge cyber-badge">
+                  FRAME {{ idx }}
                 </span>
               </div>
             </div>
 
-            <div v-if="anomalies.video_indices.length > 0" class="anomaly-list video">
-              <h4>🎬 Video Anomaly Frames</h4>
+            <div v-if="anomalies.video_indices.length > 0" class="anomaly-list video cyber-anomaly-list">
+              <div class="list-header">
+                <i class="fas fa-video"></i>
+                <h4>🎬 VIDEO ANOMALY FRAMES</h4>
+              </div>
               <div class="frame-list">
-                <span v-for="idx in anomalies.video_indices" :key="'v-' + idx" class="frame-badge">
-                  Frame {{ idx }}
+                <span v-for="idx in anomalies.video_indices" :key="'v-' + idx" class="frame-badge cyber-badge">
+                  FRAME {{ idx }}
                 </span>
               </div>
             </div>
@@ -177,37 +208,46 @@
 
       <!-- 4. Technical Details Tab -->
       <div v-show="activeTab === 'technical'" class="tab-pane">
-        <div class="technical-container">
-          <h3>⚙️ Technical Analysis</h3>
+        <div class="technical-container cyber-section">
+          <h3>⚙️ TECHNICAL ANALYSIS</h3>
 
-          <div class="technical-section">
-            <h4>Model Architecture</h4>
-            <ul class="tech-list">
-              <li><strong>Audio Extractor:</strong> Transformer-based temporal modeling with mel-spectrogram features</li>
-              <li><strong>Video Extractor:</strong> ResNet18 backbone + Spatial Attention + Transformer encoder</li>
-              <li><strong>Fusion Network:</strong> Cross-modal attention between audio and video modalities</li>
-              <li><strong>Hidden Dimensions:</strong> 128 (optimized for small datasets)</li>
-              <li><strong>Sequence Length:</strong> 32 frames/segments</li>
+          <div class="technical-section cyber-subsection">
+            <div class="section-header">
+              <i class="fas fa-microchip"></i>
+              <h4>MODEL ARCHITECTURE</h4>
+            </div>
+            <ul class="tech-list cyber-list">
+              <li><strong>AUDIO EXTRACTOR:</strong> TRANSFORMER-BASED TEMPORAL MODELING WITH MEL-SPECTROGRAM FEATURES</li>
+              <li><strong>VIDEO EXTRACTOR:</strong> RESNET18 BACKBONE + SPATIAL ATTENTION + TRANSFORMER ENCODER</li>
+              <li><strong>FUSION NETWORK:</strong> CROSS-MODAL ATTENTION BETWEEN AUDIO AND VIDEO MODALITIES</li>
+              <li><strong>HIDDEN DIMENSIONS:</strong> 128 (OPTIMIZED FOR SMALL DATASETS)</li>
+              <li><strong>SEQUENCE LENGTH:</strong> 32 FRAMES/SEGMENTS</li>
             </ul>
           </div>
 
-          <div class="technical-section">
-            <h4>Detection Features</h4>
-            <ul class="tech-list">
-              <li><strong>Audio Features:</strong> Mel-spectrogram (64 mels, 1024 FFT)</li>
-              <li><strong>Video Features:</strong> 112x112 RGB frames with ImageNet normalization</li>
-              <li><strong>Temporal Analysis:</strong> Frame-to-frame consistency scoring</li>
-              <li><strong>Consistency Modules:</strong> Detects temporal inconsistencies in manipulated content</li>
+          <div class="technical-section cyber-subsection">
+            <div class="section-header">
+              <i class="fas fa-cogs"></i>
+              <h4>DETECTION FEATURES</h4>
+            </div>
+            <ul class="tech-list cyber-list">
+              <li><strong>AUDIO FEATURES:</strong> MEL-SPECTROGRAM (64 MELS, 1024 FFT)</li>
+              <li><strong>VIDEO FEATURES:</strong> 112X112 RGB FRAMES WITH IMAGENET NORMALIZATION</li>
+              <li><strong>TEMPORAL ANALYSIS:</strong> FRAME-TO-FRAME CONSISTENCY SCORING</li>
+              <li><strong>CONSISTENCY MODULES:</strong> DETECTS TEMPORAL INCONSISTENCIES IN MANIPULATED CONTENT</li>
             </ul>
           </div>
 
-          <div class="technical-section">
-            <h4>Regularization Techniques</h4>
-            <ul class="tech-list">
-              <li>Dropout Rate: 50% (reduces overfitting)</li>
-              <li>Label Smoothing: 10% (improves generalization)</li>
-              <li>Weight Decay: 0.01 (L2 regularization)</li>
-              <li>Dynamic Class Balancing: Weights loss by class frequency</li>
+          <div class="technical-section cyber-subsection">
+            <div class="section-header">
+              <i class="fas fa-shield-alt"></i>
+              <h4>REGULARIZATION TECHNIQUES</h4>
+            </div>
+            <ul class="tech-list cyber-list">
+              <li>DROPOUT RATE: 50% (REDUCES OVERFITTING)</li>
+              <li>LABEL SMOOTHING: 10% (IMPROVES GENERALIZATION)</li>
+              <li>WEIGHT DECAY: 0.01 (L2 REGULARIZATION)</li>
+              <li>DYNAMIC CLASS BALANCING: WEIGHTS LOSS BY CLASS FREQUENCY</li>
             </ul>
           </div>
         </div>
@@ -231,10 +271,10 @@ export default {
     return {
       activeTab: 'summary',
       tabs: [
-        { id: 'summary', label: 'Summary', icon: 'fas fa-chart-pie' },
-        { id: 'temporal', label: 'Temporal Analysis', icon: 'fas fa-chart-line' },
-        { id: 'anomalies', label: 'Anomalies', icon: 'fas fa-exclamation-circle' },
-        { id: 'technical', label: 'Technical', icon: 'fas fa-cogs' }
+        { id: 'summary', label: 'SUMMARY', icon: 'fas fa-chart-pie' },
+        { id: 'temporal', label: 'TEMPORAL ANALYSIS', icon: 'fas fa-chart-line' },
+        { id: 'anomalies', label: 'ANOMALIES', icon: 'fas fa-exclamation-circle' },
+        { id: 'technical', label: 'TECHNICAL', icon: 'fas fa-cogs' }
       ],
       prediction: {
         label: 'LOADING',
@@ -269,6 +309,16 @@ export default {
     }
   },
   methods: {
+    getStatusClass() {
+      if (this.prediction.label === 'DEEPFAKE') return 'status-dot deepfake';
+      if (this.prediction.label === 'AUTHENTIC') return 'status-dot authentic';
+      return 'status-dot loading';
+    },
+    getStatusText() {
+      if (this.prediction.label === 'DEEPFAKE') return 'DEEPFAKE DETECTED';
+      if (this.prediction.label === 'AUTHENTIC') return 'AUTHENTIC CONTENT';
+      return 'ANALYZING...';
+    },
     getRiskLevel(score) {
       if (score > 0.7) return 'HIGH';
       if (score > 0.4) return 'MEDIUM';
@@ -395,148 +445,223 @@ export default {
 </script>
 
 <style scoped>
-.explainability-container {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Cyber Theme Base Styles */
+.cyber-explainability {
+  background: rgba(10, 14, 42, 0.8);
   border-radius: 12px;
-  padding: 24px;
-  color: #333;
+  padding: 0;
+  color: #00ffff;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* Cyber Header */
+.cyber-header {
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(78, 205, 196, 0.1) 100%);
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cyber-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.cyber-title i {
+  color: #00ffff;
+  font-size: 20px;
+}
+
+.status-indicators {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.deepfake {
+  background: #FF6B6B;
+}
+
+.status-dot.authentic {
+  background: #51CF66;
+}
+
+.status-dot.loading {
+  background: #FFD93D;
+}
+
+.status-text {
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.status-dot.deepfake + .status-text {
+  color: #FF6B6B;
+}
+
+.status-dot.authentic + .status-text {
+  color: #51CF66;
+}
+
+.status-dot.loading + .status-text {
+  color: #FFD93D;
 }
 
 /* Tabs */
 .tabs-header {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-  padding-bottom: 12px;
+  gap: 0;
+  margin: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+  background: rgba(0, 255, 255, 0.05);
 }
 
 .tab-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
-  padding: 8px 16px;
+  color: rgba(0, 255, 255, 0.6);
+  padding: 12px 20px;
   cursor: pointer;
-  font-size: 14px;
-  border-radius: 6px 6px 0 0;
+  font-size: 12px;
+  border-bottom: 2px solid transparent;
   transition: all 0.3s ease;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 0.5px;
 }
 
 .tab-btn:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
+  color: #00ffff;
+  background: rgba(0, 255, 255, 0.1);
 }
 
 .tab-btn.active {
-  color: white;
-  background: rgba(255, 255, 255, 0.2);
-  border-bottom: 2px solid white;
+  color: #00ffff;
+  background: rgba(0, 255, 255, 0.2);
+  border-bottom: 2px solid #00ffff;
 }
 
 .tab-btn i {
-  margin-right: 6px;
+  margin-right: 8px;
 }
 
 .tabs-content {
-  background: white;
-  border-radius: 8px;
-  overflow: hidden;
+  padding: 24px;
 }
 
 .tab-pane {
-  padding: 24px;
   animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 /* Prediction Card */
 .prediction-card {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(78, 205, 196, 0.1) 100%);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 8px;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  color: white;
+  margin-bottom: 24px;
+}
+
+.prediction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.prediction-header h3 {
+  margin: 0;
+  color: #00ffff;
+  font-size: 16px;
 }
 
 .prediction-badge {
-  font-size: 32px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
   font-weight: bold;
-  padding: 16px 24px;
-  border-radius: 8px;
-  min-width: 120px;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-transform: uppercase;
 }
 
 .prediction-badge.deepfake {
-  background: #FF6B6B;
+  background: rgba(255, 107, 107, 0.2);
+  color: #FF6B6B;
+  border: 1px solid #FF6B6B;
 }
 
 .prediction-badge.authentic {
-  background: #51CF66;
-}
-
-.prediction-details {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  background: rgba(81, 207, 102, 0.2);
+  color: #51CF66;
+  border: 1px solid #51CF66;
 }
 
 .detail-row {
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .detail-row .label {
-  opacity: 0.8;
+  color: rgba(0, 255, 255, 0.7);
 }
 
 .detail-row .value {
+  color: #00ffff;
   font-weight: bold;
 }
 
 .risk-badge {
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
+  text-transform: uppercase;
 }
 
 .risk-badge.high {
-  background: #FFE0E0;
-  color: #D32F2F;
+  background: rgba(255, 107, 107, 0.2);
+  color: #FF6B6B;
+  border: 1px solid #FF6B6B;
 }
 
 .risk-badge.medium {
-  background: #FFF3E0;
-  color: #F57C00;
+  background: rgba(255, 217, 61, 0.2);
+  color: #FFD93D;
+  border: 1px solid #FFD93D;
 }
 
 .risk-badge.low {
-  background: #E8F5E9;
-  color: #388E3C;
+  background: rgba(81, 207, 102, 0.2);
+  color: #51CF66;
+  border: 1px solid #51CF66;
 }
 
 /* Consistency Summary */
-.consistency-summary {
-  margin-top: 24px;
-}
-
 .consistency-summary h3 {
-  color: #333;
+  color: #00ffff;
   margin-bottom: 16px;
-  font-size: 16px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .consistency-grid {
@@ -548,62 +673,73 @@ export default {
 .consistency-item {
   padding: 16px;
   border-radius: 8px;
-  background: #F5F5F5;
+  background: rgba(10, 14, 42, 0.5);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.item-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.consistency-item i {
-  font-size: 24px;
+.item-header i {
+  font-size: 18px;
+  color: #00ffff;
 }
 
-.consistency-item.audio i { color: #FF6B6B; }
-.consistency-item.video i { color: #4ECDC4; }
-.consistency-item.cross i { color: #FFD93D; }
-
-.consistency-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.consistency-info .name {
+.item-header .name {
   font-size: 12px;
-  color: #666;
+  color: rgba(0, 255, 255, 0.8);
   font-weight: 600;
+  text-transform: uppercase;
 }
 
 .bar-container {
   height: 6px;
-  background: #DDD;
+  background: rgba(0, 255, 255, 0.1);
   border-radius: 3px;
   overflow: hidden;
+  margin-bottom: 8px;
 }
 
 .bar {
   height: 100%;
-  background: linear-gradient(90deg, #667eea, #764ba2);
   border-radius: 3px;
   transition: width 0.5s ease;
 }
 
+.consistency-item.audio .bar {
+  background: linear-gradient(90deg, #FF6B6B, #FF8E8E);
+}
+
+.consistency-item.video .bar {
+  background: linear-gradient(90deg, #4ECDC4, #67DCD2);
+}
+
+.consistency-item.cross .bar {
+  background: linear-gradient(90deg, #FFD93D, #FFE66D);
+}
+
 .consistency-info .score {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: bold;
-  color: #333;
+  color: #00ffff;
 }
 
 /* Temporal Analysis */
 .temporal-container h3 {
-  color: #333;
+  color: #00ffff;
   margin-bottom: 8px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .description {
-  color: #666;
-  font-size: 14px;
+  color: rgba(0, 255, 255, 0.7);
+  font-size: 12px;
   margin-bottom: 24px;
 }
 
@@ -619,34 +755,44 @@ export default {
 }
 
 .section-header h4 {
-  color: #333;
+  color: #00ffff;
   margin: 0;
+  font-size: 13px;
+  text-transform: uppercase;
 }
 
 .anomaly-count {
-  background: #FFE0E0;
-  color: #D32F2F;
+  background: rgba(255, 107, 107, 0.2);
+  color: #FF6B6B;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: bold;
+  border: 1px solid #FF6B6B;
 }
 
 .temporal-chart {
   max-height: 300px;
   margin-bottom: 8px;
+  background: rgba(10, 14, 42, 0.5);
+  border-radius: 8px;
+  padding: 12px;
 }
 
 .chart-desc {
-  font-size: 12px;
-  color: #999;
+  font-size: 11px;
+  color: rgba(0, 255, 255, 0.5);
   margin: 0;
+  text-transform: uppercase;
 }
 
 /* Anomaly Detection */
 .anomaly-container h3 {
-  color: #333;
+  color: #00ffff;
   margin-bottom: 20px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .severity-indicator {
@@ -657,21 +803,25 @@ export default {
   gap: 12px;
   margin-bottom: 24px;
   font-weight: bold;
+  border: 1px solid rgba(0, 255, 255, 0.2);
 }
 
 .severity-indicator.high {
-  background: #FFE0E0;
-  color: #D32F2F;
+  background: rgba(255, 107, 107, 0.1);
+  color: #FF6B6B;
+  border-color: #FF6B6B;
 }
 
 .severity-indicator.medium {
-  background: #FFF3E0;
-  color: #F57C00;
+  background: rgba(255, 217, 61, 0.1);
+  color: #FFD93D;
+  border-color: #FFD93D;
 }
 
 .severity-indicator.low {
-  background: #E8F5E9;
-  color: #388E3C;
+  background: rgba(81, 207, 102, 0.1);
+  color: #51CF66;
+  border-color: #51CF66;
 }
 
 .severity-indicator i {
@@ -681,6 +831,17 @@ export default {
 .severity-info {
   display: flex;
   gap: 8px;
+  align-items: center;
+}
+
+.severity-info .label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.severity-info .value {
+  font-size: 14px;
+  text-transform: uppercase;
 }
 
 .anomaly-stats {
@@ -693,32 +854,56 @@ export default {
 .stat-card {
   padding: 16px;
   border-radius: 8px;
-  background: #F5F5F5;
+  background: rgba(10, 14, 42, 0.5);
   text-align: center;
+  border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.stat-header i {
+  color: #00ffff;
+  font-size: 16px;
 }
 
 .stat-card h4 {
-  margin: 0 0 8px 0;
-  color: #666;
-  font-size: 12px;
+  margin: 0;
+  color: rgba(0, 255, 255, 0.8);
+  font-size: 11px;
+  text-transform: uppercase;
 }
 
 .stat-card .count {
   font-size: 28px;
   font-weight: bold;
-  color: #333;
+  color: #00ffff;
   margin-bottom: 8px;
 }
 
 .stat-card p {
   margin: 0;
-  font-size: 12px;
-  color: #999;
+  font-size: 11px;
+  color: rgba(0, 255, 255, 0.5);
+  text-transform: uppercase;
 }
 
-.stat-card.audio { border-left: 4px solid #FF6B6B; }
-.stat-card.video { border-left: 4px solid #4ECDC4; }
-.stat-card.combined { border-left: 4px solid #FFD93D; }
+.stat-card.audio {
+  border-left: 4px solid #FF6B6B;
+}
+
+.stat-card.video {
+  border-left: 4px solid #4ECDC4;
+}
+
+.stat-card.combined {
+  border-left: 4px solid #FFD93D;
+}
 
 .anomaly-details {
   display: grid;
@@ -729,13 +914,27 @@ export default {
 .anomaly-list {
   padding: 16px;
   border-radius: 8px;
-  background: #F5F5F5;
+  background: rgba(10, 14, 42, 0.5);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.list-header i {
+  color: #00ffff;
+  font-size: 16px;
 }
 
 .anomaly-list h4 {
-  margin: 0 0 12px 0;
-  color: #333;
-  font-size: 14px;
+  margin: 0;
+  color: #00ffff;
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
 .frame-list {
@@ -745,28 +944,45 @@ export default {
 }
 
 .frame-badge {
-  background: white;
-  border: 1px solid #DDD;
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.2);
   padding: 4px 8px;
   border-radius: 4px;
-  font-size: 12px;
-  color: #666;
+  font-size: 11px;
+  color: #00ffff;
+  text-transform: uppercase;
 }
 
 /* Technical Details */
 .technical-container h3 {
-  color: #333;
+  color: #00ffff;
   margin-bottom: 20px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .technical-section {
   margin-bottom: 24px;
 }
 
-.technical-section h4 {
-  color: #667eea;
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 12px;
-  font-size: 14px;
+}
+
+.section-header i {
+  color: #00ffff;
+  font-size: 16px;
+}
+
+.section-header h4 {
+  margin: 0;
+  color: #00ffff;
+  font-size: 12px;
+  text-transform: uppercase;
 }
 
 .tech-list {
@@ -777,9 +993,9 @@ export default {
 
 .tech-list li {
   padding: 8px 0;
-  border-bottom: 1px solid #EEE;
-  font-size: 13px;
-  color: #666;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+  font-size: 12px;
+  color: rgba(0, 255, 255, 0.8);
 }
 
 .tech-list li:last-child {
@@ -787,12 +1003,25 @@ export default {
 }
 
 .tech-list strong {
-  color: #333;
+  color: #00ffff;
 }
 
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .explainability-container {
-    padding: 16px;
+  .cyber-explainability {
+    padding: 0;
   }
 
   .tabs-header {
@@ -800,8 +1029,8 @@ export default {
   }
 
   .tab-btn {
-    font-size: 12px;
-    padding: 6px 12px;
+    font-size: 11px;
+    padding: 10px 16px;
   }
 
   .tab-pane {
