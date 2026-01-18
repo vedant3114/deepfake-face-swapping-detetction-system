@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gradient-to-br from-orange-900 to-red-900 text-white">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Time Lock</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .timer-digit { font-variant-numeric: tabular-nums; }
+    .glow { text-shadow: 0 0 20px rgba(255,100,0,0.8); }
+    #flag {
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6">
+  <div class="bg-black bg-opacity-50 backdrop-blur-xl rounded-3xl p-6 sm:p-10 max-w-md w-full text-center shadow-2xl border border-orange-700">
+    <h1 class="text-3xl sm:text-4xl font-bold mb-6 text-orange-400 glow">TIME LOCK</h1>
+    <p class="text-orange-200 mb-8 text-sm">
+      Countdown down from <strong>8 hours</strong>. 
+    </p>
+
+    <div id="timer" class="text-4xl sm:text-6xl font-mono mb-10 text-yellow-300 timer-digit glow">08:00:00</div>
+
+    <button id="claimBtn" disabled
+            class="w-full py-3 sm:py-4 bg-gray-800 rounded-xl font-bold text-lg sm:text-xl cursor-not-allowed opacity-60 transition-all duration-500">
+      CLAIM FLAG
+    </button>
+	
+    <div id="flag" class="mt-6 sm:mt-10 p-4 sm:p-6 bg-green-900 rounded-xl font-mono text-green-300 text-xs sm:text-sm leading-relaxed hidden animate-pulse">
+    </div>
+	
+  </div>
+
+<script>
+const _0x2d8f=['timelock_v1_data','elapsed','number','getItem','setItem','stringify','parse'];const _0xb=(i)=>_0x2d8f[i];const _0x7f1a=8*60*60*1000;const _0x9c2b=12*60*60*1000;const _0x4e3d=13*60*60*1000;const _0x8a1c=250;const _0x6b9f=2000;const _0x3k5p=atob('dGltZWxvY2tfdjFfZGF0YQ==');const _0xe1=document[atob('Z2V0RWxlbWVudEJ5SWQ=')](atob('dGltZXI='));const _0xe2=document[atob('Z2V0RWxlbWVudEJ5SWQ=')](atob('Y2xhaW1CdG4='));const _0xe3=document[atob('Z2V0RWxlbWVudEJ5SWQ=')](atob('ZmxhZw=='));let _0xs=JSON[_0xb(6)](localStorage[_0xb(3)](_0x3k5p));if(!_0xs||typeof _0xs[_0xb(1)]!==_0xb(2))_0xs={[_0xb(1)]:0};let _0xlt=Date.now();let _0xtd=false;const _0x4a2b=[atob('ZWxhcHNlZA=='),atob('UE9TVA=='),atob('YXBwbGljYXRpb24vanNvbg=='),atob('L2dldF9mbGFn'),atob('anNvbg=='),atob('ZmxhZw=='),atob('aGlkZGVu'),atob('ZXJyb3I='),atob('YmctZ3JlZW4tOTAw'),atob('dGV4dC1ncmVlbi0zMDA='),atob('YmctcmVkLTkwMA=='),atob('dGV4dC1yZWQtMzAw')];const _0x1f3d=(i)=>_0x4a2b[i];function _0xfmt(ms){const t=Math.max(0,Math.floor(ms/1000));const h=String(Math.floor(t/3600)).padStart(2,'0');const m=String(Math.floor((t%3600)/60)).padStart(2,'0');const s=String(t%60).padStart(2,'0');return`${h}:${m}:${s}`;}function _0xrt(){const r=Math.max(0,_0x7f1a-_0xs[_0xb(1)]);_0xe1.textContent=_0xfmt(r);}async function _0xcf(){const _0x3e=_0xs[_0x1f3d(0)];try{const _0x5a=await fetch(_0x1f3d(3),{method:_0x1f3d(1),headers:{[atob('Q29udGVudC1UeXBl')]:_0x1f3d(2)},body:JSON[atob('c3RyaW5naWZ5')]({[_0x1f3d(0)]:_0x3e})});const _0x7c=await _0x5a[_0x1f3d(4)]();if(_0x5a[atob('b2s=')]&&_0x7c[_0x1f3d(5)]){_0xe3[atob('dGV4dENvbnRlbnQ=')]=_0x7c[_0x1f3d(5)];_0xe3[atob('Y2xhc3NMaXN0')][atob('cmVtb3Zl')](_0x1f3d(6));}else{_0xe3[atob('dGV4dENvbnRlbnQ=')]=_0x7c[_0x1f3d(7)]||atob('RmFpbGVkIHRvIHJldHJpZXZlIGZsYWc=');_0xe3[atob('Y2xhc3NMaXN0')][atob('cmVtb3Zl')](_0x1f3d(8),_0x1f3d(9));_0xe3[atob('Y2xhc3NMaXN0')][atob('YWRk')](_0x1f3d(10),_0x1f3d(11));_0xe3[atob('Y2xhc3NMaXN0')][atob('cmVtb3Zl')](_0x1f3d(6));}}catch(_0x9e){_0xe3[atob('dGV4dENvbnRlbnQ=')]=atob('TmV0d29yayBlcnJvcjog')+_0x9e[atob('bWVzc2FnZQ==')];_0xe3[atob('Y2xhc3NMaXN0')][atob('cmVtb3Zl')](_0x1f3d(8),_0x1f3d(9));_0xe3[atob('Y2xhc3NMaXN0')][atob('YWRk')](_0x1f3d(10),_0x1f3d(11));_0xe3[atob('Y2xhc3NMaXN0')][atob('cmVtb3Zl')](_0x1f3d(6));}}function _0xec(){if(_0xtd)return;_0xe2[atob('ZGlzYWJsZWQ=')]=false;_0xe2[atob('Y2xhc3NOYW1l')]=atob('dy1mdWxsIHB5LTQgYmctZ3JhZGllbnQtdG8tciBmcm9tLWdyZWVuLTUwMCB0by1lbWVyYWxkLTUwMCByb3VuZGVkLXhsIGZvbnQtYm9sZCB0ZXh0LXhsIGhvdmVyOnNjYWxlLTEwNSB0cmFuc2Zvcm0gdHJhbnNpdGlvbg==');_0xe2[atob('dGV4dENvbnRlbnQ=')]=atob('Q0xBSU0gRkxBRw==');_0xe2[atob('b25jbGljaw==')]=_0xcf;}function _0xdc(msg=atob('Q0xBSU0gRkxBRw==')){_0xe2[atob('ZGlzYWJsZWQ=')]=true;_0xe2[atob('Y2xhc3NOYW1l')]=atob('dy1mdWxsIHB5LTQgYmctZ3JheS04MDAgcm91bmRlZC14bCBmb250LWJvbGQgdGV4dC14bCBjdXJzb3Itbm90LWFsbG93ZWQgb3BhY2l0eS02MA==');_0xe2[atob('dGV4dENvbnRlbnQ=')]=msg;_0xe2[atob('b25jbGljaw==')]=null;}function _0xtt(){if(_0xtd)return;_0xtd=true;clearInterval(_0xtl);_0xe1[atob('dGV4dENvbnRlbnQ=')]=atob('WFg6WFg6WFg=');_0xe2[atob('Y2xhc3NOYW1l')]=atob('dy1mdWxsIHB5LTQgYmctcmVkLTcwMCByb3VuZGVkLXhsIGZvbnQtYm9sZCB0ZXh0LXhsIGFuaW1hdGUtcHVsc2U=');_0xe2[atob('dGV4dENvbnRlbnQ=')]=atob('VEFNUEVSSU5HIERFVEVDVEVE');setTimeout(()=>location[atob('cmVsb2Fk')](),2000);}function _0xul(){const _0xe=_0xs[_0xb(1)];if(_0xe<0)return _0xtt();if(_0xe>=_0x9c2b&&_0xe<_0x4e3d){_0xec();return;}if((_0xe>=(_0x7f1a+300000))&&(_0xe<_0x9c2b)){_0xdc(atob('V29haCAhISBXZSdyZSBnb2luZyBiYWNrIGluIHRpbWUgaXMgaXQgPw=='));return;}if(_0xe>=_0x7f1a){_0xdc(atob('Tm93IHRoYXQgd2FzIGEgc2FkIGVuZCB0byBhIGdvb2Qgc3Rvcnk='));return;}_0xdc(atob('Q0xBSU0gRkxBRw=='));}const _0xtl=setInterval(()=>{if(_0xtd)return;let _0xp=null;try{const raw=localStorage[_0xb(3)](_0x3k5p);if(raw){const parsed=JSON[_0xb(6)](raw);if(parsed&&typeof parsed[_0xb(1)]===_0xb(2))_0xp=parsed[_0xb(1)];}}catch(e){_0xp=null;}if(typeof _0xp===_0xb(2)&&_0xp!==_0xs[_0xb(1)]){if(_0xp<0)return _0xtt();_0xs[_0xb(1)]=_0xp;localStorage[_0xb(4)](_0x3k5p,JSON[_0xb(5)]({[_0xb(1)]:_0xs[_0xb(1)]}));_0xlt=Date[atob('bm93')]();_0xrt();_0xul();return;}const now=Date[atob('bm93')]();const jump=now-_0xlt;if(jump>_0x6b9f)return _0xtt();_0xs[_0xb(1)]+=jump;_0xlt=now;localStorage[_0xb(4)](_0x3k5p,JSON[_0xb(5)]({[_0xb(1)]:_0xs[_0xb(1)]}));_0xrt();_0xul();},_0x8a1c);_0xrt();_0xul();
+</script>
+</body>
+</html>
