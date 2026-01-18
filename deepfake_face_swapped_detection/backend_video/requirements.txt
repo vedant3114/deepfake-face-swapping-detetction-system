@@ -4,8 +4,9 @@ python-multipart
 torch
 torchaudio
 torchvision
-opencv-python
+opencv-python-headless
 numpy
 yt-dlp
 requests
 pydantic
+soundfile

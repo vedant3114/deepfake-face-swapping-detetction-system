@@ -44,11 +44,37 @@ app.add_middleware(
 config = Config()
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 MODEL_PATH = "best_model.pth" 
+HF_MODEL_URL = "https://huggingface.co/vedant3114/best_model_video/resolve/main/best_model.pth"
 
 print(f"Using device: {DEVICE}")
 
 # Initialize Model
 model = MultiModalDeepfakeDetector().to(DEVICE)
+
+# -- Helper: Download Model if Missing --
+def download_model_if_missing():
+    if not os.path.exists(MODEL_PATH):
+        print(f"Model file {MODEL_PATH} not found. Downloading from Hugging Face...")
+        print(f"URL: {HF_MODEL_URL}")
+        try:
+            import requests
+            response = requests.get(HF_MODEL_URL, stream=True)
+            response.raise_for_status()
+            
+            with open(MODEL_PATH, "wb") as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+            print("✓ Model downloaded successfully!")
+        except Exception as e:
+            print(f"❌ Failed to download model: {e}")
+            # We will attempt to load anyway, which will likely fail, but let the error propagate naturally below
+            pass
+    else:
+        print(f"✓ Model file {MODEL_PATH} found locally.")
+
+# Download model if needed
+download_model_if_missing()
 
 # Load Weights
 if os.path.exists(MODEL_PATH):
@@ -590,5 +616,7 @@ async def predict_url_with_explanation(payload: VideoURLRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    # Use port 8000 to match the Vue.js fetch request
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    # Use config from env or default to 8000
+    port = int(os.environ.get("PORT", 8000))
+    print(f"Starting server on port {port}...")
+    uvicorn.run(app, host="0.0.0.0", port=port)
