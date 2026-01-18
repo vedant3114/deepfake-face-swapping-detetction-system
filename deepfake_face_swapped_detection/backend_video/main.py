@@ -10,8 +10,12 @@ import os
 import shutil
 import shutil as _shutil
 import uuid
+import gc
 from PIL import Image
 from model_arch import MultiModalDeepfakeDetector, Config
+
+# -- MEMORY OPTIMIZATION: Reduce thread overhead for Render Free Tier --
+torch.set_num_threads(1)
 from downloader import download_video
 from url_handler import detect_platform, is_supported_platform
 
@@ -81,21 +85,30 @@ if os.path.exists(MODEL_PATH):
     print(f"Loading weights from {MODEL_PATH}...")
     try:
         # --- CRITICAL FIX 2: weights_only=False for older/custom checkpoints ---
-        checkpoint = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
+        # MEMORY FIX: Load to CPU explicitly to avoid any CUDA overhead allocation if not present
+        checkpoint = torch.load(MODEL_PATH, map_location='cpu', weights_only=False)
         
         if 'model_state_dict' in checkpoint:
-            model.load_state_dict(checkpoint['model_state_dict'])
+            state_dict = checkpoint['model_state_dict']
+            del checkpoint # Free up the wrapper dict immediately
+            gc.collect()
+            model.load_state_dict(state_dict)
+            del state_dict # Free up the state dict copy
         else:
             model.load_state_dict(checkpoint)
+            del checkpoint
+        
+        gc.collect() # Force cleanup
         
         # --- CRITICAL: Force evaluation mode and disable gradients ---
         model.eval()
         for param in model.parameters():
             param.requires_grad = False
         
-        print("Model Loaded Successfully!")
+        print(f"Model Loaded Successfully! Memory usage optimized.")
     except Exception as e:
         print(f"Error loading model: {e}")
+        # In production, we might want to crash if model fails, but for now print error
 else:
     print(f"WARNING: Model file not found at {MODEL_PATH}. Inference will fail.")
 
