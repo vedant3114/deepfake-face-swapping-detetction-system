@@ -10,8 +10,12 @@ import os
 import shutil
 import shutil as _shutil
 import uuid
+import gc
 from PIL import Image
 from model_arch import MultiModalDeepfakeDetector, Config
+
+# -- MEMORY OPTIMIZATION: Reduce thread overhead for Render Free Tier --
+torch.set_num_threads(1)
 from downloader import download_video
 from url_handler import detect_platform, is_supported_platform
 
@@ -44,32 +48,67 @@ app.add_middleware(
 config = Config()
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 MODEL_PATH = "best_model.pth" 
+HF_MODEL_URL = "https://huggingface.co/vedant3114/best_model_video/resolve/main/best_model.pth"
 
 print(f"Using device: {DEVICE}")
 
 # Initialize Model
 model = MultiModalDeepfakeDetector().to(DEVICE)
 
+# -- Helper: Download Model if Missing --
+def download_model_if_missing():
+    if not os.path.exists(MODEL_PATH):
+        print(f"Model file {MODEL_PATH} not found. Downloading from Hugging Face...")
+        print(f"URL: {HF_MODEL_URL}")
+        try:
+            import requests
+            response = requests.get(HF_MODEL_URL, stream=True)
+            response.raise_for_status()
+            
+            with open(MODEL_PATH, "wb") as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+            print("✓ Model downloaded successfully!")
+        except Exception as e:
+            print(f"❌ Failed to download model: {e}")
+            # We will attempt to load anyway, which will likely fail, but let the error propagate naturally below
+            pass
+    else:
+        print(f"✓ Model file {MODEL_PATH} found locally.")
+
+# Download model if needed
+download_model_if_missing()
+
 # Load Weights
 if os.path.exists(MODEL_PATH):
     print(f"Loading weights from {MODEL_PATH}...")
     try:
         # --- CRITICAL FIX 2: weights_only=False for older/custom checkpoints ---
-        checkpoint = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
+        # MEMORY FIX: Load to CPU explicitly to avoid any CUDA overhead allocation if not present
+        checkpoint = torch.load(MODEL_PATH, map_location='cpu', weights_only=False)
         
         if 'model_state_dict' in checkpoint:
-            model.load_state_dict(checkpoint['model_state_dict'])
+            state_dict = checkpoint['model_state_dict']
+            del checkpoint # Free up the wrapper dict immediately
+            gc.collect()
+            model.load_state_dict(state_dict)
+            del state_dict # Free up the state dict copy
         else:
             model.load_state_dict(checkpoint)
+            del checkpoint
+        
+        gc.collect() # Force cleanup
         
         # --- CRITICAL: Force evaluation mode and disable gradients ---
         model.eval()
         for param in model.parameters():
             param.requires_grad = False
         
-        print("Model Loaded Successfully!")
+        print(f"Model Loaded Successfully! Memory usage optimized.")
     except Exception as e:
         print(f"Error loading model: {e}")
+        # In production, we might want to crash if model fails, but for now print error
 else:
     print(f"WARNING: Model file not found at {MODEL_PATH}. Inference will fail.")
 
@@ -590,5 +629,7 @@ async def predict_url_with_explanation(payload: VideoURLRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    # Use port 8000 to match the Vue.js fetch request
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    # Use config from env or default to 8000
+    port = int(os.environ.get("PORT", 8000))
+    print(f"Starting server on port {port}...")
+    uvicorn.run(app, host="0.0.0.0", port=port)
