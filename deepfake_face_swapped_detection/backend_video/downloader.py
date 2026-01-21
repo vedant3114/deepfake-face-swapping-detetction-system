@@ -2,7 +2,10 @@
 Video downloader module using yt-dlp
 """
 import os
+import uuid
+import glob
 import yt_dlp
+
 
 
 def get_video_metadata(url: str) -> dict:
@@ -48,30 +51,43 @@ def download_video(url: str, output_dir: str = "tmp_downloads", timeout: int = 1
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
     
-    # Output template
-    output_template = os.path.join(output_dir, '%(id)s.%(ext)s')
+    # Generate unique ID for this download (avoids filename collisions)
+    unique_id = str(uuid.uuid4())
+    output_template = os.path.join(output_dir, f"{unique_id}.%(ext)s")
     
     # yt-dlp options
     ydl_opts = {
-        'format': 'best[ext=mp4]/best',
+        'format': 'best', # Let yt-dlp choose best quality, we'll handle conversion if needed
         'outtmpl': output_template,
         'quiet': False,
         'no_warnings': False,
         'socket_timeout': timeout,
         'retries': 3,
+        # 'noplaylist': True,
     }
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            print(f"Attempting download to: {output_template}")
             info = ydl.extract_info(url, download=True)
-            video_id = info.get('id', 'video')
-            ext = info.get('ext', 'mp4')
-            downloaded_file = os.path.join(output_dir, f"{video_id}.{ext}")
             
-            if os.path.exists(downloaded_file):
-                return downloaded_file
-            else:
-                raise Exception(f"Downloaded file not found: {downloaded_file}")
+            # Find the file that was just created starting with unique_id
+            # This handles cases where ext might change (mkv, webm, mp4)
+            found_files = glob.glob(os.path.join(output_dir, f"{unique_id}.*"))
+            
+            if found_files:
+                final_path = found_files[0]
+                # Verify file size > 0
+                if os.path.getsize(final_path) > 0:
+                    print(f"Download successful: {final_path}")
+                    return final_path
+                else:
+                    os.remove(final_path)
+                    raise Exception("Downloaded file is empty (0 bytes).")
+            
+            raise Exception("yt-dlp finished but no file found matching pattern.")
                 
     except Exception as e:
+        print(f"Download Error: {e}")
         raise Exception(f"Failed to download video: {str(e)}")
+

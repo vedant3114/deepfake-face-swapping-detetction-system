@@ -8,12 +8,18 @@ import uvicorn
 import numpy as np
 import tensorflow as tf
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Dropout
 from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.preprocessing import image as keras_image
 from tensorflow.keras.applications.resnet50 import preprocess_input
+
+# --- New Imports for URL Processing ---
+from pydantic import BaseModel
+from url_handler import detect_platform
+from downloader import download_image
 
 # -----------------------------
 # Debug / Runtime Info
@@ -162,6 +168,18 @@ async def lifespan(app: FastAPI):
 # Initialize the App (debug=True to show full stack traces during development)
 app = FastAPI(title="Deepfake Detection API", lifespan=lifespan, debug=True)
 
+# Add CORS middleware to allow frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins (can be restricted to specific URLs in production)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+
+class ImageURLRequest(BaseModel):
+    url: str
+
 
 def transform_image(image_bytes: bytes) -> np.ndarray:
     """
@@ -252,6 +270,102 @@ async def explain(file: UploadFile = File(...)):
     except Exception as e:
         print(f"Error processing image: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/explain-url")
+async def explain_url_endpoint(payload: ImageURLRequest):
+    """
+    Endpoint to explain the prediction from an Image URL.
+    """
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model is not loaded.")
+
+    url = payload.url
+    print(f"Received URL for analysis: {url}")
+    
+    # Detect platform (optional logging)
+    platform = detect_platform(url)
+    print(f"Detected platform: {platform}")
+
+    temp_file_path = None
+    try:
+        # Download image
+        temp_file_path = download_image(url, output_dir="tmp_downloads_images")
+        
+        if not temp_file_path or not os.path.exists(temp_file_path):
+            raise HTTPException(status_code=400, detail="Failed to download image from URL.")
+
+        # Read file contents
+        with open(temp_file_path, "rb") as f:
+            contents = f.read()
+
+        # --- Re-use existing logic ---
+        processed_image = transform_image(contents)
+
+        prediction = model.predict(processed_image)
+        score = float(prediction[0][0])
+
+        if score > 0.5:
+            label = "Real"
+            confidence = score
+        else:
+            label = "Deepfake"
+            confidence = 1.0 - score
+
+        heatmap = get_gradcam_heatmap(processed_image, model)
+        dominant_region, region_scores = explain_decision(heatmap)
+        heatmap_image = generate_heatmap_image(processed_image, heatmap)
+
+        region_scores = {k: float(v) for k, v in region_scores.items()}
+
+        explanation = (
+            f"The model analyzed the image and found the highest activation in the {dominant_region} region. "
+        )
+        confidence_desc = "high" if confidence > 0.8 else "moderate" if confidence > 0.6 else "low"
+
+        if label == "Deepfake":
+            explanation += (
+                f"With {confidence_desc} confidence ({confidence*100:.1f}%), this image is classified as a Deepfake. "
+            )
+            # Add specific explanations based on region logic (simplified for brevity, works same as file upload)
+            if dominant_region == "Eyes/Forehead":
+                explanation += "The model detected potential artifacts in the eyes or hairline."
+            elif dominant_region == "Nose/Cheeks":
+                explanation += "The model focused on skin texture anomalies."
+            elif dominant_region == "Mouth/Chin":
+                explanation += "Irregularities in the mouth/chin area were detected."
+            else:
+                explanation += "General synthetic patterns were observed."
+        else:
+            explanation += (
+                f"With {confidence_desc} confidence ({confidence*100:.1f}%), this image is classified as Real. "
+            )
+            explanation += "The model detected natural features."
+
+        return {
+            "filename": url,
+            "prediction": label,
+            "confidence_percentage": f"{confidence * 100:.2f}%",
+            "raw_score": float(score),
+            "dominant_focus_region": dominant_region,
+            "region_scores": region_scores,
+            "explanation": explanation,
+            "heatmap_image_base64": heatmap_image,
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"Error processing URL: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    finally:
+        # Clean up
+        if temp_file_path and os.path.exists(temp_file_path):
+            try:
+                os.remove(temp_file_path)
+            except:
+                pass
 
 
 @app.get("/")

@@ -206,10 +206,16 @@
 
             <div v-if="analysisComplete && showExplainability" class="mt-6">
               <DeepfakeExplainability :result="explainabilityResult" />
-              <div class="flex mt-6 justify-center">
+              <div class="flex mt-6 justify-center gap-2 flex-col sm:flex-row">
+                <button
+                  @click="generatePDFReport('video')"
+                  class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button"
+                >
+                  <span class="truncate">📄 PDF REPORT</span>
+                </button>
                 <button
                   @click="resetAnalysis"
-                  class="flex min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button"
+                  class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#204b4b] text-white text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button-secondary"
                 >
                   <span class="truncate">↻ ANALYZE ANOTHER VIDEO</span>
                 </button>
@@ -253,10 +259,16 @@
 
             <div v-if="analysisComplete && showExplainability && detectionMode === 'url'" class="mt-6">
               <DeepfakeExplainability :result="explainabilityResult" />
-              <div class="flex mt-6 justify-center">
+              <div class="flex mt-6 justify-center gap-2 flex-col sm:flex-row">
+                <button
+                  @click="generatePDFReport('video')"
+                  class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button"
+                >
+                  <span class="truncate">📄 PDF REPORT</span>
+                </button>
                 <button
                   @click="resetUrl"
-                  class="flex min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button"
+                  class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#204b4b] text-white text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button-secondary"
                 >
                   <span class="truncate">↻ ANALYZE ANOTHER URL</span>
                 </button>
@@ -277,7 +289,25 @@
           </h2>
         </div>
 
+        <!-- Image Detection Mode Tabs -->
+        <div class="flex gap-2 sm:gap-4 py-2 border-b border-[#2e6b6b] cyber-tabs">
+          <button
+            @click="imageDetectionMode = 'upload'"
+            :class="['px-3 sm:px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200 cyber-tab', imageDetectionMode === 'upload' ? 'active' : '']"
+          >
+            📁 UPLOAD IMAGE
+          </button>
+          <button
+            @click="imageDetectionMode = 'url'"
+            :class="['px-3 sm:px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200 cyber-tab', imageDetectionMode === 'url' ? 'active' : '']"
+          >
+            🔗 IMAGE URL
+          </button>
+        </div>
+
         <div class="flex flex-col p-3 sm:p-4">
+          <!-- Image Upload Mode -->
+          <div v-show="imageDetectionMode === 'upload'">
           <div
             v-if="!imageUploaded"
             class="flex flex-col items-center gap-4 sm:gap-6 rounded-xl border-2 border-dashed border-[#2e6b6b] px-4 sm:px-6 py-6 sm:py-14 transition-all duration-300 hover:border-[#00ffff] cyber-upload-zone"
@@ -340,7 +370,6 @@
               </div>
             </div>
           </div>
-        </div>
 
         <div v-if="imageUploaded && !imageAnalysisComplete" class="flex flex-col gap-2 sm:gap-3 p-3 sm:p-4 cyber-analysis-status">
           <div class="flex gap-4 sm:gap-6 justify-between items-center">
@@ -377,11 +406,21 @@
         <div v-if="imageAnalysisComplete" class="p-3 sm:p-4">
           <div class="flex flex-col gap-4 rounded-xl border-2 border-[#2e6b6b] bg-[#173636] p-4 sm:p-6 cyber-result-card">
             <div class="flex flex-col sm:flex-row gap-4 items-start">
-              <img
-                :src="imagePreviewUrl"
-                :alt="image?.name"
-                class="w-full sm:w-48 h-auto sm:h-48 object-cover rounded-lg border border-[#2e6b6b]"
-              />
+              <div class="flex flex-col gap-4 items-center w-full sm:w-auto">
+                <img
+                  :src="imagePreviewUrl"
+                  :alt="image?.name"
+                  class="w-full sm:w-48 h-auto sm:h-48 object-cover rounded-lg border border-[#2e6b6b]"
+                />
+                <div v-if="imageHeatmapBase64" class="w-full sm:w-48">
+                  <p class="text-[#8dcece] text-xs font-bold mb-2 uppercase tracking-wider">Grad-CAM Heatmap</p>
+                  <img
+                    :src="imageHeatmapBase64"
+                    alt="Grad-CAM Heatmap"
+                    class="w-full h-auto object-cover rounded-lg border border-[#00ffff]"
+                  />
+                </div>
+              </div>
               <div class="flex-1 flex flex-col gap-4">
                 <div>
                   <p
@@ -394,36 +433,152 @@
                     CONFIDENCE: {{ imageConfidence }}%
                   </p>
                 </div>
-                <div
-                  class="bg-[#204b4b] rounded-lg p-4"
-                  v-if="imageAnalysisResult === 'DEEPFAKE'"
-                >
-                  <h3 class="text-white text-sm font-bold mb-2">DEEPFAKE DETECTION FINDINGS</h3>
-                  <ul class="text-[#8dcece] text-xs space-y-1">
-                    <li>• FACE MANIPULATION DETECTED</li>
-                    <li>• TEXTURE INCONSISTENCIES FOUND</li>
-                    <li>• BLENDING ARTIFACTS IDENTIFIED</li>
-                  </ul>
-                </div>
-                <div
-                  class="bg-[#173636] rounded-lg p-4 border border-[#2e6b6b]"
-                  v-else
-                >
-                  <h3 class="text-white text-sm font-bold mb-2">AUTHENTICITY CONFIRMED</h3>
-                  <ul class="text-[#8dcece] text-xs space-y-1">
-                    <li>• NO FACE MANIPULATION DETECTED</li>
-                    <li>• NATURAL TEXTURE PATTERNS CONFIRMED</li>
-                    <li>• NO SUSPICIOUS BLENDING ARTIFACTS</li>
-                  </ul>
+                <div class="bg-[#204b4b] rounded-lg p-4 border border-[#2e6b6b]">
+                  <h3 class="text-white text-sm font-bold mb-2">EXPLANATION ANALYSIS</h3>
+                  <p class="text-[#8dcece] text-xs mb-3 italic">"{{ imageExplanationText }}"</p>
+                  
+                  <div v-if="imageRegionScores" class="space-y-3 mb-3">
+                    <div v-for="(score, region) in imageRegionScores" :key="region" class="flex flex-col gap-1">
+                      <div class="flex justify-between text-[10px] text-[#8dcece] uppercase tracking-wider">
+                        <span>{{ region }}</span>
+                        <span>{{ (score * 100).toFixed(1) }}%</span>
+                      </div>
+                      <div class="h-1.5 bg-[#0a0e2a] rounded-full overflow-hidden">
+                        <div class="h-full bg-[#00ffff] rounded-full transition-all duration-500" :style="{ width: (score * 100) + '%' }"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-if="imageDominantFocusRegion" class="flex items-center gap-2 text-xs font-bold text-white border-t border-[#2e6b6b] pt-2 mt-2">
+                    <span class="text-[#8dcece]">DOMINANT REGION:</span>
+                    <span class="text-[#00ffff] uppercase">{{ imageDominantFocusRegion }}</span>
+                  </div>
                 </div>
               </div>
             </div>
-            <button
-              @click="resetImageAnalysis"
-              class="flex min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-3 bg-[#204b4b] text-white text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 w-full sm:w-auto cyber-button-secondary"
-            >
-              <span class="truncate">↻ ANALYZE ANOTHER IMAGE</span>
-            </button>
+            <div class="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
+              <button
+                @click="generatePDFReport('image')"
+                class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-3 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button"
+              >
+                <span class="truncate">📄 PDF REPORT</span>
+              </button>
+              <button
+                @click="resetImageAnalysis"
+                class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-3 bg-[#204b4b] text-white text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button-secondary"
+              >
+                <span class="truncate">↻ NEW ANALYSIS</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <!-- Image URL Mode -->
+          <div v-show="imageDetectionMode === 'url'" class="w-full">
+            <div class="flex flex-col gap-4">
+              <p class="text-white text-sm font-medium">ENTER AN IMAGE URL:</p>
+              <div class="flex gap-2">
+                <input
+                  v-model="imageUrl"
+                  type="url"
+                  placeholder="https://example.com/image.jpg"
+                  class="flex-1 px-4 py-2 rounded-lg bg-[#2e6b6b] text-white placeholder-[#8dcece] border border-[#204b4b] focus:border-[#00ffff] outline-none transition-colors cyber-input"
+                />
+                <button
+                  @click="predictImageFromUrl"
+                  :disabled="imageUrlLoading || !imageUrl"
+                  class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed cyber-button"
+                >
+                  <span class="truncate">{{ imageUrlLoading ? 'PROCESSING...' : '▶ PREDICT' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div v-if="imageUrlLoading" class="flex flex-col gap-3 mt-6">
+              <div class="flex gap-4 justify-between items-center">
+                <p class="text-white text-sm font-medium">DOWNLOADING AND ANALYZING...</p>
+                <p class="text-[#00ffff] text-xs font-medium">{{ imageProgress }}%</p>
+              </div>
+              <div class="rounded bg-[#2e6b6b] h-2 cyber-progress-container">
+                <div
+                  class="h-full rounded bg-[#00ffff] transition-all duration-500 ease-out cyber-progress-bar"
+                  :style="{ width: imageProgress + '%' }"
+                ></div>
+              </div>
+            </div>
+
+            <div v-if="imageAnalysisComplete && imageDetectionMode === 'url'" class="mt-6">
+              <div class="flex flex-col gap-4 rounded-xl border-2 border-[#2e6b6b] bg-[#173636] p-4 sm:p-6 cyber-result-card">
+                 <div class="flex flex-col sm:flex-row gap-4 items-start">
+                  <div class="flex flex-col gap-4 items-center w-full sm:w-auto">
+                    <div class="w-full sm:w-48">
+                      <p class="text-[#8dcece] text-xs font-bold mb-2 uppercase tracking-wider">Original Image</p>
+                      <img
+                        :src="imageOriginalUrl"
+                        class="w-full h-auto object-cover rounded-lg border border-[#2e6b6b]"
+                      />
+                    </div>
+                    <div v-if="imageHeatmapBase64" class="w-full sm:w-48">
+                      <p class="text-[#8dcece] text-xs font-bold mb-2 uppercase tracking-wider">Grad-CAM Heatmap</p>
+                      <img
+                        :src="imageHeatmapBase64"
+                        alt="Grad-CAM Heatmap"
+                        class="w-full h-auto object-cover rounded-lg border border-[#00ffff]"
+                      />
+                    </div>
+                  </div>
+                  <div class="flex-1 flex flex-col gap-4">
+                    <div>
+                      <p
+                        class="text-white tracking-light text-xl sm:text-2xl font-bold leading-tight mb-2"
+                        :class="imageAnalysisResult === 'AUTHENTIC' ? 'text-green-400' : 'text-red-400'"
+                      >
+                        {{ imageAnalysisResult }}
+                      </p>
+                      <p class="text-[#8dcece] text-sm">
+                        CONFIDENCE: {{ imageConfidence }}%
+                      </p>
+                    </div>
+                    <div class="bg-[#204b4b] rounded-lg p-4 border border-[#2e6b6b] w-full">
+                      <h3 class="text-white text-sm font-bold mb-2">EXPLANATION ANALYSIS</h3>
+                      <p class="text-[#8dcece] text-xs mb-3 italic">"{{ imageExplanationText }}"</p>
+                      
+                      <div v-if="imageRegionScores" class="space-y-3 mb-3">
+                        <div v-for="(score, region) in imageRegionScores" :key="region" class="flex flex-col gap-1">
+                          <div class="flex justify-between text-[10px] text-[#8dcece] uppercase tracking-wider">
+                            <span>{{ region }}</span>
+                            <span>{{ (score * 100).toFixed(1) }}%</span>
+                          </div>
+                          <div class="h-1.5 bg-[#0a0e2a] rounded-full overflow-hidden">
+                            <div class="h-full bg-[#00ffff] rounded-full transition-all duration-500" :style="{ width: (score * 100) + '%' }"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div v-if="imageDominantFocusRegion" class="flex items-center gap-2 text-xs font-bold text-white border-t border-[#2e6b6b] pt-2 mt-2">
+                        <span class="text-[#8dcece]">DOMINANT REGION:</span>
+                        <span class="text-[#00ffff] uppercase">{{ imageDominantFocusRegion }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex mt-6 justify-center gap-2 flex-col sm:flex-row">
+                  <button
+                    @click="generatePDFReport('image')"
+                    class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button"
+                  >
+                    <span class="truncate">📄 PDF REPORT</span>
+                  </button>
+                  <button
+                    @click="resetImageUrl"
+                    class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#204b4b] text-white text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button-secondary"
+                  >
+                    <span class="truncate">↻ ANALYZE ANOTHER URL</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -552,11 +707,171 @@
         </footer>
       </div>
     </div>
+
+    <!-- Hidden PDF Report Template for Images -->
+    <div id="imagePdfReport" style="display: none; background: white; padding: 40px; color: #000; font-family: Arial, sans-serif; min-width: 800px; max-width: 900px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #00ffff; padding-bottom: 20px;">
+        <h1 style="margin: 0; font-size: 28px; color: #0a0e2a;">DEEPFAKE DETECTION REPORT</h1>
+        <p style="margin: 10px 0 0 0; color: #666;">Analysis Report for Image Classification</p>
+      </div>
+
+      <div style="margin-bottom: 20px; font-size: 14px;">
+        <p><strong>Report Date:</strong> {{ new Date().toLocaleString() }}</p>
+        <p><strong>Source:</strong> {{ imageDetectionMode === 'url' ? (imageExplanationResult?.filename || imageUrl || 'N/A') : (image?.name || 'Image') }}</p>
+        <p v-if="imageDetectionMode === 'upload'"><strong>File Size:</strong> {{ ((image?.size ?? 0) / 1024 / 1024).toFixed(2) }} MB</p>
+        <p><strong>Analysis Model:</strong> ResNet50 + Grad-CAM Explainability</p>
+      </div>
+
+      <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0; color: #0a0e2a;">CLASSIFICATION RESULT</h2>
+        <p style="font-size: 24px; font-weight: bold; margin: 10px 0;" 
+           :style="{ color: imageAnalysisResult === 'AUTHENTIC' ? '#22c55e' : '#ef4444' }">
+          {{ imageAnalysisResult }}
+        </p>
+        <p style="margin: 10px 0; font-size: 14px;"><strong>Confidence Score:</strong> {{ imageConfidence }}%</p>
+        <p style="margin: 10px 0; font-size: 14px;"><strong>Raw Score:</strong> {{ imageExplanationResult?.raw_score?.toFixed(4) ?? 'N/A' }}</p>
+      </div>
+
+      <!-- Original Image -->
+      <div v-if="imagePreviewUrl || imageOriginalUrl" style="margin-bottom: 20px;">
+        <h3 style="color: #0a0e2a; margin-bottom: 10px; font-size: 16px;">{{ imageDetectionMode === 'url' ? 'SOURCE IMAGE' : 'UPLOADED IMAGE' }}</h3>
+        <img :src="imageDetectionMode === 'url' ? imageOriginalUrl : imagePreviewUrl" style="max-width: 100%; height: auto; max-height: 300px; border: 2px solid #ddd; border-radius: 8px;">
+      </div>
+
+      <!-- Heatmap -->
+      <div v-if="imageHeatmapBase64" style="margin-bottom: 20px;">
+        <h3 style="color: #0a0e2a; margin-bottom: 10px; font-size: 16px;">GRAD-CAM HEATMAP VISUALIZATION</h3>
+        <p style="font-size: 12px; color: #666; margin: 0 0 10px 0;">Shows which regions influenced the model's decision</p>
+        <img :src="imageHeatmapBase64" style="max-width: 100%; height: auto; max-height: 300px; border: 2px solid #ddd; border-radius: 8px;">
+      </div>
+
+      <!-- Region Scores -->
+      <div v-if="imageRegionScores" style="margin-bottom: 20px;">
+        <h3 style="color: #0a0e2a; margin-bottom: 10px; font-size: 16px;">REGION-BASED ANALYSIS SCORES</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <thead>
+            <tr style="background: #f0f0f0;">
+              <th style="padding: 10px; text-align: left; border: 1px solid #ddd; font-weight: bold;">Facial Region</th>
+              <th style="padding: 10px; text-align: right; border: 1px solid #ddd; font-weight: bold;">Score</th>
+              <th style="padding: 10px; text-align: right; border: 1px solid #ddd; font-weight: bold;">Percentage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(score, region) in imageRegionScores" :key="region">
+              <td style="padding: 10px; border: 1px solid #ddd;">{{ region }}</td>
+              <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">{{ score.toFixed(4) }}</td>
+              <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">{{ (score * 100).toFixed(2) }}%</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="margin-top: 10px; font-size: 14px;"><strong>Dominant Focus Region:</strong> {{ imageDominantFocusRegion }}</p>
+      </div>
+
+      <!-- Explanation -->
+      <div v-if="imageExplanationText" style="background: #f9f9f9; padding: 15px; border-left: 4px solid #00ffff; margin-bottom: 20px;">
+        <h3 style="margin-top: 0; color: #0a0e2a; font-size: 16px;">DETAILED EXPLANATION</h3>
+        <p style="margin: 0; line-height: 1.6; color: #333; font-size: 13px;">{{ imageExplanationText }}</p>
+      </div>
+
+      <!-- Footer -->
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; text-align: center;">
+        <p style="margin: 5px 0;">Generated by: Deepfake Detection System v1.0</p>
+        <p style="margin: 5px 0;">Report ID: {{ imageExplanationResult?.filename || 'N/A' }}</p>
+        <p style="margin: 5px 0;">For inquiries or questions, contact support.</p>
+      </div>
+    </div>
+
+    <!-- Hidden PDF Report Template for Videos -->
+    <div id="videoPdfReport" style="display: none; background: white; padding: 40px; color: #000; font-family: Arial, sans-serif; min-width: 800px; max-width: 900px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #00ffff; padding-bottom: 20px;">
+        <h1 style="margin: 0; font-size: 28px; color: #0a0e2a;">DEEPFAKE DETECTION REPORT</h1>
+        <p style="margin: 10px 0 0 0; color: #666;">Analysis Report for Video Classification</p>
+      </div>
+
+      <div style="margin-bottom: 20px; font-size: 14px;">
+        <p><strong>Report Date:</strong> {{ new Date().toLocaleString() }}</p>
+        <p><strong>File Name:</strong> {{ file?.name || videoUrl || 'Video' }}</p>
+        <p v-if="file"><strong>File Size:</strong> {{ ((file?.size ?? 0) / 1024 / 1024).toFixed(2) }} MB</p>
+        <p><strong>Analysis Model:</strong> Multi-Modal Deepfake Detector (Audio-Visual)</p>
+      </div>
+
+      <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0; color: #0a0e2a;">CLASSIFICATION RESULT</h2>
+        <p style="font-size: 24px; font-weight: bold; margin: 10px 0;" 
+           :style="{ color: analysisResult === 'AUTHENTIC' ? '#22c55e' : '#ef4444' }">
+          {{ analysisResult }}
+        </p>
+        <p style="margin: 10px 0; font-size: 14px;"><strong>Confidence Score:</strong> {{ videoConfidence }}%</p>
+      </div>
+
+      <!-- Video Thumbnail -->
+      <div v-if="analysisImageUrl" style="margin-bottom: 20px;">
+        <h3 style="color: #0a0e2a; margin-bottom: 10px; font-size: 16px;">VIDEO FRAME</h3>
+        <img :src="analysisImageUrl" style="max-width: 100%; height: auto; max-height: 300px; border: 2px solid #ddd; border-radius: 8px;">
+      </div>
+
+      <!-- Explainability Data -->
+      <div v-if="explainabilityResult" style="margin-bottom: 20px;">
+        <h3 style="color: #0a0e2a; margin-bottom: 10px; font-size: 16px;">ANALYSIS DETAILS</h3>
+        <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #00ffff;">
+          <p style="margin: 5px 0; font-size: 13px;"><strong>Detection Method:</strong> Audio-Visual Synchronization Analysis</p>
+          <p style="margin: 5px 0; font-size: 13px;"><strong>Model:</strong> Multi-Modal Deep Learning</p>
+          <p style="margin: 5px 0; font-size: 13px;"><strong>Features Analyzed:</strong> Facial movements, audio patterns, temporal consistency</p>
+        </div>
+      </div>
+
+      <!-- Technical Details -->
+      <div style="margin-bottom: 20px;">
+        <h3 style="color: #0a0e2a; margin-bottom: 10px; font-size: 16px;">TECHNICAL SUMMARY</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <thead>
+            <tr style="background: #f0f0f0;">
+              <th style="padding: 10px; text-align: left; border: 1px solid #ddd; font-weight: bold;">Analysis Metric</th>
+              <th style="padding: 10px; text-align: right; border: 1px solid #ddd; font-weight: bold;">Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd;">Prediction</td>
+              <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">{{ analysisResult }}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd;">Confidence</td>
+              <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">{{ videoConfidence }}%</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border: 1px solid #ddd;">Processing Time</td>
+              <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">< 10 seconds</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Explanation -->
+      <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #00ffff; margin-bottom: 20px;">
+        <h3 style="margin-top: 0; color: #0a0e2a; font-size: 16px;">ANALYSIS EXPLANATION</h3>
+        <p style="margin: 0; line-height: 1.6; color: #333; font-size: 13px;">
+          The video was analyzed using a multi-modal deep learning model that examines both visual and audio features. 
+          The system checks for inconsistencies in facial movements, audio-visual synchronization, temporal coherence, 
+          and other deepfake artifacts. The confidence score reflects the model's certainty in its prediction based on 
+          these comprehensive analyses.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; text-align: center;">
+        <p style="margin: 5px 0;">Generated by: Deepfake Detection System v1.0</p>
+        <p style="margin: 5px 0;">Report ID: {{ file?.name || videoUrl || new Date().getTime() }}</p>
+        <p style="margin: 5px 0;">For inquiries or questions, contact support.</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import DeepfakeExplainability from './components/DeepfakeExplainability.vue';
 
 // Vanta.NET background initialization
@@ -605,6 +920,15 @@ const showExplainability = ref(false);
 const explainabilityResult = ref<any>(null);
 const detectionMode = ref<'upload' | 'url'>('upload');
 
+// Image Explainability
+const showImageExplainability = ref(false);
+const imageExplanationText = ref('');
+const imageHeatmapBase64 = ref('');
+const imageDominantFocusRegion = ref('');
+const imageRegionScores = ref<Record<string, number> | null>(null);
+const imageExplanationResult = ref<any>(null);
+
+
 // Image upload state variables
 const imageFileInput = ref<HTMLInputElement | null>(null);
 const image = ref<File | null>(null);
@@ -616,6 +940,10 @@ const imageProgress = ref(0);
 const imagesDraggedOver = ref(false);
 const imagePreviewUrl = ref('');
 const imageConfidence = ref(0);
+const imageDetectionMode = ref<'upload' | 'url'>('upload');
+const imageUrl = ref('');
+const imageUrlLoading = ref(false);
+const imageOriginalUrl = ref(''); // Store original image URL separately from heatmap
 
 // Steps for the process
 const steps = [
@@ -709,7 +1037,7 @@ const startAnalysis = async () => {
     form.append('file', file.value as Blob, (file.value as File).name);
 
     // POST to backend with explainability
-    const resp = await fetch('http://localhost:8001/predict-explain', {
+    const resp = await fetch('https://vedant3114-backend-video.hf.space/predict-explain', {
       method: 'POST',
       body: form,
     });
@@ -732,10 +1060,30 @@ const startAnalysis = async () => {
     // Store explainability data
     explainabilityResult.value = result;
 
-    if (analysisResult.value === 'AUTHENTIC') {
-      analysisImageUrl.value = "https://lh3.googleusercontent.com/aida-public/AB6AXuBWykGhzIhAAROV41C5B3xoquJD9m81hBvD8p1gT6EhIjDdIGG9gev_yvHpgEF_RNke8_0jE2zdQo_Uj1hBPHwFiVdcwwt4VZJZzWzzf8CZPDjye1RT59yI_qUNXWyDiqcO7Beca8C6nkZOQkzTIqPBBu1P5sxTHIHPWqv8EH68Sf1mcEVy1W0U_sOz3oDl-91RMe4WHCc56ROdbJ5J-i-rgM7sp56j69mJry4mR5Xau4klNDx1yBGegqPrp-ddQFjMe_a5Ibde2pk";
-    } else {
-      analysisImageUrl.value = "https://lh3.googleusercontent.com/aida-public/AB6AXuBWykGhzIhAAROV41C5B3xoquJD9m81hBvD8p1gT6EhIjDdIGG9gev_yvHpgEF_RNke8_0jE2zdQo_Uj1hBPHwFiVdcwwt4VZJZzWzzf8CZPDjye1RT59yI_qUNXWyDiqcO7Beca8C6nkZOQkzTIqPBBu1P5sxTHIHPWqv8EH68Sf1mcEVy1W0U_sOz3oDl-91RMe4WHCc56ROdbJ5J-i-rgM7sp56j69mJry4mR5Xau4klNDx1yBGegqPrp-ddQFjMe_a5Ibde2pk";
+    // Extract video frame thumbnail
+    try {
+      const videoElement = document.createElement('video');
+      videoElement.preload = 'metadata';
+      const videoUrl = URL.createObjectURL(file.value as File);
+      videoElement.src = videoUrl;
+      
+      await new Promise((resolve) => {
+        videoElement.onloadedmetadata = () => {
+          videoElement.currentTime = Math.min(1, videoElement.duration / 2);
+        };
+        videoElement.onseeked = () => resolve(null);
+      });
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(videoElement, 0, 0);
+      analysisImageUrl.value = canvas.toDataURL('image/jpeg', 0.8);
+      URL.revokeObjectURL(videoUrl);
+    } catch (err) {
+      console.warn('Could not extract video frame:', err);
+      analysisImageUrl.value = '';
     }
 
     progress.value = 100;
@@ -785,10 +1133,38 @@ const predictFromUrl = async () => {
 
     explainabilityResult.value = result;
 
-    if (analysisResult.value === 'AUTHENTIC') {
-      analysisImageUrl.value = "https://lh3.googleusercontent.com/aida-public/AB6AXuBWykGhzIhAAROV41C5B3xoquJD9m81hBvD8p1gT6EhIjDdIGG9gev_yvHpgEF_RNke8_0jE2zdQo_Uj1hBPHwFiVdcwwt4VZJZzWzzf8CZPDjye1RT59yI_qUNXWyDiqcO7Beca8C6nkZOQkzTIqPBBu1P5sxTHIHPWqv8EH68Sf1mcEVy1W0U_sOz3oDl-91RMe4WHCc56ROdbJ5J-i-rgM7sp56j69mJry4mR5Xau4klNDx1yBGegqPrp-ddQFjMe_a5Ibde2pk";
-    } else {
-      analysisImageUrl.value = "https://lh3.googleusercontent.com/aida-public/AB6AXuBWykGhzIhAAROV41C5B3xoquJD9m81hBvD8p1gT6EhIjDdIGG9gev_yvHpgEF_RNke8_0jE2zdQo_Uj1hBPHwFiVdcwwt4VZJZzWzzf8CZPDjye1RT59yI_qUNXWyDiqcO7Beca8C6nkZOQkzTIqPBBu1P5sxTHIHPWqv8EH68Sf1mcEVy1W0U_sOz3oDl-91RMe4WHCc56ROdbJ5J-i-rgM7sp56j69mJry4mR5Xau4klNDx1yBGegqPrp-ddQFjMe_a5Ibde2pk";
+    // Try to extract video thumbnail from URL
+    try {
+      const videoElement = document.createElement('video');
+      videoElement.crossOrigin = 'anonymous';
+      videoElement.src = videoUrl.value;
+      videoElement.preload = 'metadata';
+      
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Timeout')), 5000);
+        videoElement.onloadedmetadata = () => {
+          clearTimeout(timeout);
+          videoElement.currentTime = Math.min(1, videoElement.duration / 2);
+        };
+        videoElement.onseeked = () => {
+          clearTimeout(timeout);
+          resolve(null);
+        };
+        videoElement.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Video load error'));
+        };
+      });
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(videoElement, 0, 0);
+      analysisImageUrl.value = canvas.toDataURL('image/jpeg', 0.8);
+    } catch (err) {
+      console.warn('Could not extract video thumbnail from URL (CORS may be blocking):', err);
+      analysisImageUrl.value = '';
     }
 
     progress.value = 100;
@@ -889,7 +1265,8 @@ const startImageAnalysis = async () => {
     const form = new FormData();
     form.append('file', file);
 
-    const resp = await fetch('https://raturishivaay-deepfakeapinew.hf.space/predict', {
+    // Call local backend on port 8000
+    const resp = await fetch('https://manya2040-backend-image.hf.space/explain', {
       method: 'POST',
       body: form,
     });
@@ -903,63 +1280,46 @@ const startImageAnalysis = async () => {
     const data = await resp.json();
     console.log('Image backend response:', data);
 
-    // Robust parsing to handle different API response formats (result, data[], top-level label, HF spaces, etc.)
-    function parsePrediction(resp: any): { rawLabel: string; rawConfidence: number } {
-      const candidate = resp?.result ?? resp;
+    // Parse response
+    imageAnalysisResult.value = data.prediction === 'Real' ? 'AUTHENTIC' : 'DEEPFAKE';
+    
+    // Parse confidence string "99.57%" -> 99.57
+    const confStr = data.confidence_percentage?.replace('%', '') || '0';
+    imageConfidence.value = parseFloat(confStr);
 
-      // 1) Top-level object with label/score/confidence
-      if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) {
-        if (candidate.label) {
-          return { rawLabel: String(candidate.label), rawConfidence: candidate.confidence ?? candidate.score ?? candidate.confidence_percent ?? candidate.score_percent ?? 0 };
-        }
-      }
-
-      // 2) HuggingFace / Gradio style: { data: [{ label, score }] }
-      if (Array.isArray(resp?.data) && resp.data.length > 0 && resp.data[0].label) {
-        const it = resp.data[0];
-        return { rawLabel: String(it.label), rawConfidence: it.score ?? it.confidence ?? 0 };
-      }
-
-      // 3) result is an array like [{label, score}, ...]
-      if (Array.isArray(candidate) && candidate.length > 0 && candidate[0].label) {
-        const it = candidate[0];
-        return { rawLabel: String(it.label), rawConfidence: it.score ?? it.confidence ?? 0 };
-      }
-
-      // 4) predictions/predictions[0]
-      if (Array.isArray(resp?.predictions) && resp.predictions.length > 0) {
-        const it = resp.predictions[0];
-        return { rawLabel: it.label ? String(it.label) : String(it[0] ?? 'AUTHENTIC'), rawConfidence: it.score ?? it.confidence ?? 0 };
-      }
-
-      // fallback
-      return { rawLabel: 'AUTHENTIC', rawConfidence: 0 };
-    }
-
-    const parsed = parsePrediction(data);
-    const rawLabel = (parsed.rawLabel ?? 'AUTHENTIC').toString().toUpperCase();
-    let rawConfidence = Number(parsed.rawConfidence ?? 0);
-
-    // Normalize confidence: if in 0..1 convert to percent
-    if (rawConfidence <= 1) rawConfidence = Math.round(rawConfidence * 100);
-    // If already in 0..100, keep as is
-
-    // Map multiple label variants to AUTHENTIC / DEEPFAKE
-    const isDeepfake = /DEEP|FAKE|FAKES|SPOOF|TOO|1|TRUE/i.test(rawLabel) && !/REAL|AUTHENTIC|GENUINE|TRUE_NEGATIVE/i.test(rawLabel);
-
-    imageAnalysisResult.value = isDeepfake ? 'DEEPFAKE' : 'AUTHENTIC';
-    imageConfidence.value = Math.min(100, Math.max(0, Math.round(rawConfidence)));
+    // Set Explainability Data - store full response for component
+    imageExplanationResult.value = {
+      filename: data.filename || (image.value as File)?.name || 'image',
+      prediction: data.prediction || 'Unknown',
+      confidence_percentage: data.confidence_percentage || '0%',
+      raw_score: data.raw_score || 0,
+      dominant_focus_region: data.dominant_focus_region || 'Unknown',
+      region_scores: data.region_scores || { 'Eyes/Forehead': 0, 'Nose/Cheeks': 0, 'Mouth/Chin': 0 },
+      explanation: data.explanation || 'No explanation provided.',
+      heatmap_image_base64: data.heatmap_image_base64 || '',
+      original_image: imagePreviewUrl.value // Keep original image reference
+    };
+    
+    imageExplanationText.value = data.explanation || 'No explanation provided.';
+    imageHeatmapBase64.value = data.heatmap_image_base64 || '';
+    imageDominantFocusRegion.value = data.dominant_focus_region || '';
+    imageRegionScores.value = data.region_scores || null;
 
     imageProgress.value = 100;
     imageAnalysisComplete.value = true;
+    showImageExplainability.value = true;
+
   } catch (err: any) {
     console.error(err);
     alert('Image analysis failed: ' + (err?.message ?? err));
     imageProgress.value = 0;
+    isImageAnalyzing.value = false;
   } finally {
     isImageAnalyzing.value = false;
   }
 };
+
+
 
 const resetImageAnalysis = () => {
   imageAnalysisComplete.value = false;
@@ -968,6 +1328,205 @@ const resetImageAnalysis = () => {
   imageUploaded.value = false;
   imagePreviewUrl.value = '';
   imageConfidence.value = 0;
+  imageDominantFocusRegion.value = '';
+  imageRegionScores.value = null;
+};
+
+const predictImageFromUrl = async () => {
+    if (!imageUrl.value) {
+        alert('Please enter an image URL');
+        return;
+    }
+
+    imageUrlLoading.value = true;
+    imageAnalysisComplete.value = false;
+    imageProgress.value = 10;
+    
+    // Show the URL as preview initially
+    imagePreviewUrl.value = imageUrl.value;
+
+    try {
+        const resp = await fetch('http://127.0.0.1:8000/explain-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: imageUrl.value })
+        });
+
+        if (!resp.ok) {
+            const txt = await resp.text();
+            throw new Error(`Server error: ${resp.status} ${txt}`);
+        }
+        
+        imageProgress.value = 50;
+        const data = await resp.json();
+        
+        // Parse response
+        imageAnalysisResult.value = data.prediction === 'Real' ? 'AUTHENTIC' : 'DEEPFAKE';
+        
+        const confStr = data.confidence_percentage?.replace('%', '') || '0';
+        imageConfidence.value = parseFloat(confStr);
+
+        imageExplanationText.value = data.explanation || 'No explanation provided.';
+        imageHeatmapBase64.value = data.heatmap_image_base64 || '';
+        imageDominantFocusRegion.value = data.dominant_focus_region || '';
+        imageRegionScores.value = data.region_scores || null;
+
+        // Store original image URL separately
+        imageOriginalUrl.value = imageUrl.value;
+        
+        // Set Explainability Data with URL as filename
+        imageExplanationResult.value = {
+          filename: imageUrl.value, // Use URL as filename
+          prediction: data.prediction || 'Unknown',
+          confidence_percentage: data.confidence_percentage || '0%',
+          raw_score: data.raw_score || 0,
+          dominant_focus_region: data.dominant_focus_region || 'Unknown',
+          region_scores: data.region_scores || { 'Eyes/Forehead': 0, 'Nose/Cheeks': 0, 'Mouth/Chin': 0 },
+          explanation: data.explanation || 'No explanation provided.',
+          heatmap_image_base64: data.heatmap_image_base64 || '',
+          original_image: imageUrl.value // Keep original URL reference
+        };
+
+        imageProgress.value = 100;
+        imageAnalysisComplete.value = true;
+        showImageExplainability.value = true;
+
+    } catch (err: any) {
+        console.error(err);
+        alert('Image URL analysis failed. Please verify the link is accessible. Error: ' + (err?.message ?? err));
+        imageProgress.value = 0;
+    } finally {
+        imageUrlLoading.value = false;
+    }
+};
+
+
+const resetImageUrl = () => {
+    imageUrl.value = '';
+    imageAnalysisComplete.value = false;
+    imageProgress.value = 0;
+    imageConfidence.value = 0;
+    imagePreviewUrl.value = '';
+    imageOriginalUrl.value = '';
+    imageDominantFocusRegion.value = '';
+    imageRegionScores.value = null;
+};
+
+const generatePDFReport = async (analysisType: 'image' | 'video') => {
+  try {
+    const reportElement = document.getElementById(
+      analysisType === 'image' ? 'imagePdfReport' : 'videoPdfReport'
+    );
+
+    if (!reportElement) {
+      console.error('Report element not found');
+      alert('Report element not found. Please try again.');
+      return;
+    }
+
+    // Show loading message
+    const originalText = document.activeElement as HTMLButtonElement;
+    if (originalText?.textContent) {
+      originalText.textContent = '⏳ GENERATING...';
+    }
+
+    // Convert all images in the report to base64 to avoid CORS issues
+    const images = reportElement.querySelectorAll('img');
+    const imagePromises = Array.from(images).map(async (img) => {
+      const imgElement = img as HTMLImageElement;
+      if (imgElement.src && !imgElement.src.startsWith('data:')) {
+        try {
+          const response = await fetch(imgElement.src);
+          const blob = await response.blob();
+          const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          imgElement.src = dataUrl;
+        } catch (err) {
+          console.warn('Failed to convert image to base64:', err);
+        }
+      }
+    });
+    await Promise.all(imagePromises);
+
+    // Convert HTML to canvas with better error handling
+    let canvas;
+    try {
+      canvas = await html2canvas(reportElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 5000,
+        onclone: (clonedDocument) => {
+          // Ensure images are visible in clone
+          const clonedElement = clonedDocument.getElementById(
+            analysisType === 'image' ? 'imagePdfReport' : 'videoPdfReport'
+          );
+          if (clonedElement) {
+            clonedElement.style.display = 'block';
+          }
+        }
+      });
+    } catch (canvasError) {
+      console.error('Canvas conversion error:', canvasError);
+      alert(`Failed to convert report to image: ${canvasError instanceof Error ? canvasError.message : 'Unknown error'}`);
+      if (originalText?.textContent) {
+        originalText.textContent = '📄 PDF REPORT';
+      }
+      return;
+    }
+
+    if (!canvas) {
+      throw new Error('Canvas generation returned null');
+    }
+
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const imgWidth = 210; // A4 width in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    // Add image to PDF, handle multiple pages if needed
+    const imgData = canvas.toDataURL('image/png');
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= 297; // A4 height in mm
+
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= 297;
+    }
+
+    // Download PDF
+    const timestamp = new Date().getTime();
+    const fileName =
+      analysisType === 'image'
+        ? `deepfake-analysis-${image.value?.name || 'image'}-${timestamp}.pdf`
+        : `deepfake-analysis-${file.value?.name || 'video'}-${timestamp}.pdf`;
+
+    pdf.save(fileName);
+    
+    // Reset button text
+    if (originalText?.textContent) {
+      originalText.textContent = '📄 PDF REPORT';
+    }
+    
+  } catch (error) {
+    console.error('PDF generation failed:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    alert(`Failed to generate PDF report: ${errorMessage}`);
+  }
 };
 </script>
 
