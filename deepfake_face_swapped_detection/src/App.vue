@@ -1110,7 +1110,7 @@ const predictFromUrl = async () => {
   progress.value = 10;
 
   try {
-    const resp = await fetch('http://localhost:8001/predict-url-explain', {
+    const resp = await fetch('http://localhost:8000/predict-url-explain', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: videoUrl.value })
