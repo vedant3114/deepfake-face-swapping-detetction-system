@@ -8,3 +8,5 @@ matplotlib
 yt-dlp
 requests
 instaloader
+selenium
+webdriver-manager

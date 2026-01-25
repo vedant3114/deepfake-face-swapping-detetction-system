@@ -23,7 +23,7 @@
                 <path d="M12 22V12" stroke="#0a0e2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </div>
-            <h1 class="text-[#00ffff] text-lg font-bold tracking-wider">DEEPFAKE DETECTOR</h1>
+            <h1 class="text-[#00ffff] text-lg font-bold tracking-wider">DeepDrishti</h1>
           </div>
           <div class="flex gap-2">
             <div class="w-3 h-3 bg-red-500 rounded-full cyber-pulse"></div>
@@ -357,7 +357,7 @@
                   {{ image?.name }}
                 </div>
                 <div class="text-[#8dcece] text-xs">
-                  SIZE: {{ (image?.size ?? 0 / 1024 / 1024).toFixed(2) }} MB
+                  SIZE: {{ ((image?.size ?? 0) / 1024 / 1024).toFixed(2) }} MB
                 </div>
                 <div class="flex gap-2">
                   <button
@@ -635,15 +635,15 @@
         <div class="flex flex-wrap gap-3 sm:gap-4 p-3 sm:p-4">
           <div class="flex min-w-[140px] flex-1 flex-col gap-2 rounded-xl p-4 sm:p-6 bg-[#204b4b] transition-all duration-300 hover:scale-105 cyber-stat-card">
             <p class="text-[#8dcece] text-xs sm:text-sm font-medium leading-normal">F1-SCORE</p>
-            <p class="text-[#00ffff] tracking-light text-xl sm:text-2xl font-bold leading-tight">97%</p>
+            <p class="text-[#00ffff] tracking-light text-xl sm:text-2xl font-bold leading-tight">90%</p>
           </div>
           <div class="flex min-w-[140px] flex-1 flex-col gap-2 rounded-xl p-4 sm:p-6 bg-[#204b4b] transition-all duration-300 hover:scale-105 cyber-stat-card">
             <p class="text-[#8dcece] text-xs sm:text-sm font-medium leading-normal">ACCURACY</p>
-            <p class="text-[#00ffff] tracking-light text-xl sm:text-2xl font-bold leading-tight">98.5%</p>
+            <p class="text-[#00ffff] tracking-light text-xl sm:text-2xl font-bold leading-tight">91.5%</p>
           </div>
           <div class="flex min-w-[140px] flex-1 flex-col gap-2 rounded-xl p-4 sm:p-6 bg-[#204b4b] transition-all duration-300 hover:scale-105 cyber-stat-card">
             <p class="text-[#8dcece] text-xs sm:text-sm font-medium leading-normal">PROCESSING</p>
-            <p class="text-[#00ffff] tracking-light text-xl sm:text-2xl font-bold leading-tight">&lt; 10s</p>
+            <p class="text-[#00ffff] tracking-light text-xl sm:text-2xl font-bold leading-tight">&lt; 50s</p>
           </div>
         </div>
 
@@ -703,7 +703,7 @@
               CONTACT US
             </button>
           </div>
-          <p class="text-[#8dcece] text-xs sm:text-base font-normal leading-normal">© 2025 DEEPFAKE DETECTOR. ALL RIGHTS RESERVED.</p>
+          <p class="text-[#8dcece] text-xs sm:text-base font-normal leading-normal">© 2026 DEEPFAKE DETECTOR. ALL RIGHTS RESERVED.</p>
         </footer>
       </div>
     </div>
@@ -1346,7 +1346,7 @@ const predictImageFromUrl = async () => {
     imagePreviewUrl.value = imageUrl.value;
 
     try {
-        const resp = await fetch('http://127.0.0.1:8000/explain-url', {
+        const resp = await fetch('http://127.0.0.1:8001/explain-url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: imageUrl.value })
@@ -1371,8 +1371,8 @@ const predictImageFromUrl = async () => {
         imageDominantFocusRegion.value = data.dominant_focus_region || '';
         imageRegionScores.value = data.region_scores || null;
 
-        // Store original image URL separately
-        imageOriginalUrl.value = imageUrl.value;
+        // Store original image as base64 from backend
+        imageOriginalUrl.value = data.original_image_base64 || imageUrl.value;
         
         // Set Explainability Data with URL as filename
         imageExplanationResult.value = {

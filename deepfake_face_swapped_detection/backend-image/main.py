@@ -342,6 +342,15 @@ async def explain_url_endpoint(payload: ImageURLRequest):
             )
             explanation += "The model detected natural features."
 
+        # Convert original image to base64 for frontend display
+        original_image_base64 = ""
+        try:
+            with open(temp_file_path, "rb") as f:
+                original_image_base64 = base64.b64encode(f.read()).decode()
+                original_image_base64 = f"data:image/jpeg;base64,{original_image_base64}"
+        except Exception as e:
+            print(f"Could not convert image to base64: {e}")
+
         return {
             "filename": url,
             "prediction": label,
@@ -351,6 +360,7 @@ async def explain_url_endpoint(payload: ImageURLRequest):
             "region_scores": region_scores,
             "explanation": explanation,
             "heatmap_image_base64": heatmap_image,
+            "original_image_base64": original_image_base64,
         }
 
     except HTTPException as he:
