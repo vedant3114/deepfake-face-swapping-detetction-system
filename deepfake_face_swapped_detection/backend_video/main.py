@@ -12,6 +12,9 @@ import shutil as _shutil
 import uuid
 import gc
 from PIL import Image
+import base64
+from io import BytesIO
+
 from model_arch import MultiModalDeepfakeDetector, Config
 
 # -- MEMORY OPTIMIZATION: Reduce thread overhead for Render Free Tier --
@@ -309,6 +312,47 @@ def preprocess_video(video_path):
         
     return audio_tensor, video_tensor
 
+# -- Helper 3: Extract Frames for Explainability --
+def extract_frames_base64(video_path, frame_indices):
+    """
+    Extracts frames at specific indices and converts them to base64 strings.
+    Used for showing anomalous frames in the UI.
+    """
+    frames_data = []
+    try:
+        cap = cv2.VideoCapture(str(video_path))
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        
+        if total_frames > 0:
+            for idx in frame_indices:
+                # Clamp index to be safe
+                safe_idx = max(0, min(int(idx), total_frames - 1))
+                cap.set(cv2.CAP_PROP_POS_FRAMES, safe_idx)
+                ret, frame = cap.read()
+                if ret:
+                    # Convert BGR to RGB
+                    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    pil_img = Image.fromarray(rgb_frame)
+                    
+                    # Resize for display to reduce payload size (e.g., max 300px height)
+                    # This keeps the response JSON manageable
+                    pil_img.thumbnail((300, 300))
+                    
+                    buffered = BytesIO()
+                    pil_img.save(buffered, format="JPEG", quality=70)
+                    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                    
+                    frames_data.append({
+                        "frame_index": safe_idx,
+                        "confidence_score": 0.0, # Placeholder, can be mapped from consistency score if needed
+                        "image_base64": f"data:image/jpeg;base64,{img_str}"
+                    })
+        cap.release()
+    except Exception as e:
+        print(f"Error extracting frames: {e}")
+    return frames_data
+
+
 # -- API Endpoints --
 
 @app.get("/")
@@ -531,6 +575,39 @@ async def predict_with_explanation(file: UploadFile = File(...)):
             threshold = 0.3
             audio_anomalies = np.where(audio_temporal < threshold)[0].tolist()
             video_anomalies = np.where(video_temporal < threshold)[0].tolist()
+            
+            # --- Extract Anomalous Frames ---
+            anomalous_frames = []
+            try:
+                # If it's a video file (not a static image pretending to be video)
+                if ext not in ['.jpg', '.jpeg', '.png', '.webp']:
+                    # 1. Identify indices with lowest consistency (most anomalous)
+                    # Sort indices by score (ascending) -> lowest score first
+                    sorted_indices = np.argsort(video_temporal)
+                    # Take top 4 most anomalous
+                    top_anomalous_sequence_indices = sorted_indices[:4].tolist()
+                    
+                    # 2. Map sequence indices back to original frame indices
+                    cap_temp = cv2.VideoCapture(temp_filename)
+                    total_frames_count = int(cap_temp.get(cv2.CAP_PROP_FRAME_COUNT))
+                    cap_temp.release()
+                    
+                    if total_frames_count > 0:
+                        all_frame_indices = np.linspace(0, total_frames_count - 1, config.SEQUENCE_LENGTH, dtype=int)
+                        target_frame_indices = [all_frame_indices[i] for i in top_anomalous_sequence_indices]
+                        
+                        # 3. Extract frames
+                        anomalous_frames = extract_frames_base64(temp_filename, target_frame_indices)
+                        
+                        # Attach consistency scores to the frames for UI
+                        for i, frame_data in enumerate(anomalous_frames):
+                            # The i-th frame corresponds to the i-th index in top_anomalous_sequence_indices
+                            # wait, extract_frames_base64 appends in order of target_frame_indices
+                            seq_idx = top_anomalous_sequence_indices[i]
+                            score = video_temporal[seq_idx]
+                            frame_data["consistency_score"] = float(score)
+            except Exception as e:
+                print(f"Error extracting anomalous frames: {e}")
         
         label = "DEEPFAKE" if prediction_idx == 1 else "AUTHENTIC"
         
@@ -556,6 +633,7 @@ async def predict_with_explanation(file: UploadFile = File(...)):
                     "video_anomaly_indices": video_anomalies[:10],
                     "severity": "HIGH" if len(audio_anomalies) > 5 or len(video_anomalies) > 5 else "MEDIUM" if len(audio_anomalies) > 0 or len(video_anomalies) > 0 else "LOW"
                 },
+                "anomalous_frames": anomalous_frames,
                 "sequence_length": len(audio_temporal),
                 "analysis_type": "temporal_consistency_analysis"
             },
@@ -617,6 +695,30 @@ async def predict_url_with_explanation(payload: VideoURLRequest):
             threshold = 0.3
             audio_anomalies = np.where(audio_temporal < threshold)[0].tolist()
             video_anomalies = np.where(video_temporal < threshold)[0].tolist()
+            
+            # --- Extract Anomalous Frames ---
+            anomalous_frames = []
+            try:
+                sorted_indices = np.argsort(video_temporal)
+                top_anomalous_sequence_indices = sorted_indices[:4].tolist()
+                
+                cap_temp = cv2.VideoCapture(video_path)
+                total_frames_count = int(cap_temp.get(cv2.CAP_PROP_FRAME_COUNT))
+                cap_temp.release()
+                
+                if total_frames_count > 0:
+                    all_frame_indices = np.linspace(0, total_frames_count - 1, config.SEQUENCE_LENGTH, dtype=int)
+                    target_frame_indices = [all_frame_indices[i] for i in top_anomalous_sequence_indices]
+                    
+                    anomalous_frames = extract_frames_base64(video_path, target_frame_indices)
+                    
+                    for i, frame_data in enumerate(anomalous_frames):
+                        if i < len(top_anomalous_sequence_indices):
+                            seq_idx = top_anomalous_sequence_indices[i]
+                            score = video_temporal[seq_idx]
+                            frame_data["consistency_score"] = float(score)
+            except Exception as e:
+                print(f"Error extracting anomalous frames for URL: {e}")
         
         label = "DEEPFAKE" if prediction_idx == 1 else "AUTHENTIC"
         
@@ -641,6 +743,7 @@ async def predict_url_with_explanation(payload: VideoURLRequest):
                     "video_inconsistencies": len(video_anomalies),
                     "severity": "HIGH" if len(audio_anomalies) > 5 or len(video_anomalies) > 5 else "MEDIUM" if len(audio_anomalies) > 0 or len(video_anomalies) > 0 else "LOW"
                 },
+                "anomalous_frames": anomalous_frames,
             }
         }
     

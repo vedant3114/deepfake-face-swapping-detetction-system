@@ -823,6 +823,32 @@
         </div>
       </div>
 
+      <!-- Anomalous Frames -->
+      <div v-if="explainabilityResult?.explainability?.anomalous_frames?.length > 0" style="margin-bottom: 20px;">
+        <h3 style="color: #0a0e2a; margin-bottom: 15px; font-size: 16px;">DETECTED ANOMALOUS FRAMES</h3>
+        <p style="margin: 0 0 15px 0; font-size: 12px; color: #666;">
+          Frames identified with the lowest consistency scores, indicating potential manipulation artifacts.
+        </p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <div 
+            v-for="(frame, i) in explainabilityResult.explainability.anomalous_frames" 
+            :key="i"
+            style="width: 30%; min-width: 150px; border: 1px solid #ddd; border-radius: 6px; overflow: hidden;"
+          >
+            <div style="position: relative; aspect-ratio: 16/9; background: #000;">
+              <img :src="frame.image_base64" style="width: 100%; height: 100%; object-fit: cover;">
+              <div style="position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.7); padding: 2px 5px; border-radius: 3px; border: 1px solid #ff6b6b; font-size: 10px; color: #ff6b6b; font-weight: bold;">
+                FRAME {{ frame.frame_index }}
+              </div>
+            </div>
+            <div style="padding: 8px; background: #f9f9f9;">
+              <div style="font-size: 10px; color: #666; margin-bottom: 2px;">CONSISTENCY</div>
+              <div style="font-size: 12px; font-weight: bold; color: #0a0e2a;">{{ frame.consistency_score?.toFixed(3) || '0.00' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Technical Details -->
       <div style="margin-bottom: 20px;">
         <h3 style="color: #0a0e2a; margin-bottom: 10px; font-size: 16px;">TECHNICAL SUMMARY</h3>
@@ -1085,7 +1111,8 @@ const startAnalysis = async () => {
     form.append('file', file.value as Blob, (file.value as File).name);
 
     // POST to backend with explainability
-    const resp = await fetch('https://vedant3114-backend-video.hf.space/predict-explain', {
+    // POST to backend with explainability
+    const resp = await fetch('http://localhost:8000/predict-explain', {
       method: 'POST',
       body: form,
     });

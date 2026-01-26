@@ -203,6 +203,31 @@
               </div>
             </div>
           </div>
+
+          <!-- Anomalous Frames Gallery -->
+          <div v-if="anomalies.frames.length > 0" class="frames-gallery cyber-gallery">
+            <div class="list-header">
+              <i class="fas fa-images"></i>
+              <h4>📸 DETECTED ANOMALOUS FRAMES (LOWEST CONSISTENCY)</h4>
+            </div>
+            <div class="frames-grid">
+              <div v-for="(frame, i) in anomalies.frames" :key="i" class="frame-item cyber-frame">
+                <div class="frame-wrapper">
+                  <img :src="frame.image_base64" alt="Anomalous Frame" />
+                  <div class="frame-overlay">
+                    <span class="frame-idx">FRAME {{ frame.frame_index }}</span>
+                  </div>
+                </div>
+                <div class="frame-details">
+                  <span class="consistency-label">CONSISTENCY</span>
+                  <div class="consistency-bar">
+                    <div class="fill" :style="{ width: (frame.consistency_score * 100) + '%' }"></div>
+                  </div>
+                  <span class="consistency-val">{{ frame.consistency_score.toFixed(3) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -289,7 +314,8 @@ export default {
         audio: 0,
         video: 0,
         audio_indices: [],
-        video_indices: []
+        video_indices: [],
+        frames: []
       },
       audioChart: null,
       videoChart: null
@@ -418,11 +444,15 @@ export default {
       // Anomalies
       if (this.result.explainability?.anomalies_detected) {
         const anom = this.result.explainability.anomalies_detected;
+        console.log("Full Explainability Data:", this.result.explainability); // DEBUG
+        console.log("Anomalous Frames:", this.result.explainability.anomalous_frames); // DEBUG
+        
         this.anomalies = {
           audio: anom.audio_inconsistencies || 0,
           video: anom.video_inconsistencies || 0,
           audio_indices: anom.audio_anomaly_indices || [],
-          video_indices: anom.video_anomaly_indices || []
+          video_indices: anom.video_anomaly_indices || [],
+          frames: this.result.explainability.anomalous_frames || []
         };
       }
 
@@ -1044,5 +1074,91 @@ export default {
   .consistency-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Frames Gallery */
+.frames-gallery {
+  margin-top: 24px;
+}
+
+.frames-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.frame-item {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.frame-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 255, 255, 0.15);
+  border-color: #00ffff;
+}
+
+.frame-wrapper {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: #000;
+}
+
+.frame-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.frame-overlay {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 107, 107, 0.5);
+}
+
+.frame-idx {
+  font-size: 10px;
+  font-weight: bold;
+  color: #FF6B6B;
+}
+
+.frame-details {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.consistency-label {
+  font-size: 10px;
+  color: rgba(0, 255, 255, 0.6);
+  text-transform: uppercase;
+}
+
+.consistency-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.consistency-bar .fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF6B6B, #FF8E8E);
+}
+
+.consistency-val {
+  font-size: 12px;
+  font-weight: bold;
+  color: #00ffff;
+  text-align: right;
 }
 </style>
