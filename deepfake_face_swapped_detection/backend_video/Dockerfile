@@ -1,13 +1,16 @@
-# Use Python 3.10
-FROM python:3.10-slim
+# Use Python 3.10 (Full image to avoid DNS/SSL issues with slim)
+FROM python:3.10
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies (ffmpeg and libsndfile for audio)
+# Install system dependencies (ffmpeg, libsndfile1, and network diagnostics)
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libsndfile1 \
+    ca-certificates \
+    dnsutils \
+    iputils-ping \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for caching

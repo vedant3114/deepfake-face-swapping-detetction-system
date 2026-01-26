@@ -39,7 +39,47 @@ except Exception as e:
     print(f"⚠️  Could not extract metadata: {e}")
     print("   This is OK - may be due to network or platform restrictions")
 
+# Test 3: Network Diagnostics (Using code from main.py)
+print("\nTesting Network Connectivity...")
+print("-" * 60)
+try:
+    import socket
+    # Test 1: Google DNS
+    ip = socket.gethostbyname("www.google.com")
+    print(f"✓ DNS Resolution (Google): {ip}")
+    
+    # Test 2: Target (Instagram)
+    ip_ig = socket.gethostbyname("www.instagram.com")
+    print(f"✓ DNS Resolution (Instagram): {ip_ig}")
+except Exception as e:
+    print(f"❌ Network Diagnostic Failed: {e}")
+
+
+# Test 4: Real Download Test
+print("\nTesting Real Download (with force_ipv4)...")
+print("-" * 60)
+# Use a very small video/short to save time
+test_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ" # Rick Roll (Reliable test)
+output_dir = "test_downloads"
+
+try:
+    print(f"Attempting download from: {test_url}")
+    path = download_video(test_url, output_dir=output_dir, timeout=60)
+    print(f"✓ Download Successful!")
+    print(f"  Path: {path}")
+    print(f"  Checking if file exists: {os.path.exists(path)}")
+    
+    # Cleanup
+    if os.path.exists(path):
+        os.remove(path)
+        print("  ✓ Cleanup successful")
+        # Cleanup dir if empty
+        try:
+            os.rmdir(output_dir)
+        except:
+            pass
+except Exception as e:
+    print(f"❌ Download Failed: {e}")
+
 print("\n" + "=" * 60)
 print("Test complete!")
-print("\nNote: To test video downloading, use the /predict-video-url endpoint")
-print("in the FastAPI application.")

@@ -52,6 +52,29 @@ HF_MODEL_URL = "https://huggingface.co/vedant3114/best_model_video/resolve/main/
 
 print(f"Using device: {DEVICE}")
 
+# -- Diagnostic: Test Network on Startup --
+def test_network():
+    print("🌐 Testing Network Connectivity...")
+    try:
+        import socket
+        # Test 1: Google DNS
+        ip = socket.gethostbyname("www.google.com")
+        print(f"   ✓ DNS Resolution (Google): {ip}")
+        
+        # Test 2: Target (Instagram)
+        ip_ig = socket.gethostbyname("www.instagram.com")
+        print(f"   ✓ DNS Resolution (Instagram): {ip_ig}")
+        
+        # Test 3: Public IP
+        import requests
+        public_ip = requests.get("https://api64.ipify.org?format=json", timeout=5).json()["ip"]
+        print(f"   ✓ Public IP: {public_ip}")
+        
+    except Exception as e:
+        print(f"   ❌ Network Diagnostic Failed: {e}")
+
+test_network()
+
 # Initialize Model
 model = MultiModalDeepfakeDetector().to(DEVICE)
 
@@ -561,6 +584,11 @@ async def predict_url_with_explanation(payload: VideoURLRequest):
     
     if not is_supported_platform(platform):
         raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform}")
+    
+    # Note: Instagram downloads may fail on some hosting platforms due to network restrictions
+    # Removed restriction for local development
+    # if platform == "instagram":
+    #     raise HTTPException(status_code=400, detail="Instagram videos are not supported on this hosting platform due to network restrictions. Please use YouTube, TikTok, or direct URLs.")
     
     video_path = None
     try:

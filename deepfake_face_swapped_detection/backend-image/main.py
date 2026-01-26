@@ -9,6 +9,10 @@ import numpy as np
 import tensorflow as tf
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 from PIL import Image
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Dropout
@@ -20,6 +24,9 @@ from tensorflow.keras.applications.resnet50 import preprocess_input
 from pydantic import BaseModel
 from url_handler import detect_platform
 from downloader import download_image
+
+# --- New Import for API Integration ---
+import requests
 
 # -----------------------------
 # Debug / Runtime Info
@@ -42,6 +49,12 @@ if not hasattr(tf, "is_inf"):
 # --- CONFIGURATION ---
 MODEL_WEIGHTS_FILENAME = "resnet50_model.h5"
 INPUT_SHAPE = (180, 180)
+
+# --- API CONFIGURATION ---
+# NVIDIA Hive Deepfake Image Detection API
+API_URL = os.getenv("API_URL")
+API_KEY = os.getenv("API_KEY")
+USE_API_FALLBACK = True  # Set to False to disable API
 
 # Global variable to hold the loaded model
 model = None
@@ -134,6 +147,65 @@ def generate_heatmap_image(img_array, heatmap):
     return f"data:image/png;base64,{img_str}"
 
 
+def get_api_prediction(image_bytes: bytes) -> tuple:
+    """
+    Calls NVIDIA Hive API for deepfake image detection.
+    Returns (Label, Confidence) or (None, None) if API fails.
+    Label: 'Real' or 'Deepfake'
+    Confidence: float (0.0 to 1.0) representing certainty in the Label.
+    """
+    if not USE_API_FALLBACK:
+        return None, None
+    
+    try:
+        # Encode image to base64
+        image_b64 = base64.b64encode(image_bytes).decode()
+        
+        # Since images are small (180x180), use direct base64
+        payload = {
+            "input": [f"data:image/png;base64,{image_b64}"]
+        }
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {API_KEY}",
+            "Accept": "application/json",
+        }
+        
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+        
+        if response.status_code == 200:
+            result = response.json()
+            # Response format: {"data": [{"bounding_boxes": [{"is_deepfake": 0.999}, ...], "status": "SUCCESS"}]}
+            data = result.get("data", [])
+            if data and data[0].get("status") == "SUCCESS":
+                bounding_boxes = data[0].get("bounding_boxes", [])
+                if bounding_boxes:
+                    # Aggregate is_deepfake scores
+                    # API returns 'is_deepfake' score [0, 1]. High means Deepfake.
+                    deepfake_scores = [box.get("is_deepfake", 0) for box in bounding_boxes]
+                    avg_score = sum(deepfake_scores) / len(deepfake_scores)
+                    
+                    if avg_score > 0.5:
+                        return "Deepfake", avg_score
+                    else:
+                        # If average deepfake score is low, it's Real.
+                        # Confidence for Real is 1 - deepfake_score
+                        return "Real", 1.0 - avg_score
+                else:
+                    # No faces detected. Default to Real (or could be 'Unknown')
+                    # We'll assume Real with lower confidence or just None?
+                    # Let's say Real with moderate confidence if no face found but image processed.
+                    return "Real", 0.6
+        
+        print(f"API call failed: {response.status_code} - {response.text}")
+        return None, None
+    
+    except Exception as e:
+        print(f"API error: {e}")
+        return None, None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -220,11 +292,35 @@ async def explain(file: UploadFile = File(...)):
         # NOTE: Verify your training label mapping.
         # Current logic assumes score>0.5 => Real. Adjust if your training was opposite.
         if score > 0.5:
-            label = "Real"
-            confidence = score
+            model_label = "Real"
+            model_confidence = score
         else:
-            label = "Deepfake"
-            confidence = 1.0 - score
+            model_label = "Deepfake"
+            model_confidence = 1.0 - score
+
+        # Get API prediction
+        api_label, api_confidence = get_api_prediction(contents)
+        
+        # Decision logic: If API available and disagrees, use API; else use model
+        # Or if we just want to verify:
+        # Let's say if Model says X and API says Y, we trust API (it's NVIDIA!)
+        if api_label and api_label != model_label:
+            final_label = api_label
+            final_confidence = api_confidence  # Use API confidence
+            used_api = True
+        elif api_label and api_label == model_label:
+            final_label = model_label
+            # If both agree, boost confidence? Or just keep model's.
+            # Let's keep model's, but mark as confirmed?
+            final_confidence = max(model_confidence, api_confidence)
+            used_api = True # We effectively used it to confirm
+        else:
+            final_label = model_label
+            final_confidence = model_confidence
+            used_api = False
+
+        label = final_label
+        confidence = final_confidence
 
         heatmap = get_gradcam_heatmap(processed_image, model)
         dominant_region, region_scores = explain_decision(heatmap)
@@ -265,6 +361,8 @@ async def explain(file: UploadFile = File(...)):
             "region_scores": region_scores,
             "explanation": explanation,
             "heatmap_image_base64": heatmap_image,
+            "used_api_fallback": used_api,
+            "api_prediction": api_label,
         }
 
     except Exception as e:
@@ -306,11 +404,31 @@ async def explain_url_endpoint(payload: ImageURLRequest):
         score = float(prediction[0][0])
 
         if score > 0.5:
-            label = "Real"
-            confidence = score
+            model_label = "Real"
+            model_confidence = score
         else:
-            label = "Deepfake"
-            confidence = 1.0 - score
+            model_label = "Deepfake"
+            model_confidence = 1.0 - score
+
+        # Get API prediction
+        api_label, api_confidence = get_api_prediction(contents)
+        
+        # Decision logic
+        if api_label and api_label != model_label:
+            final_label = api_label
+            final_confidence = api_confidence
+            used_api = True
+        elif api_label and api_label == model_label:
+            final_label = model_label
+            final_confidence = max(model_confidence, api_confidence)
+            used_api = True
+        else:
+            final_label = model_label
+            final_confidence = model_confidence
+            used_api = False
+
+        label = final_label
+        confidence = final_confidence
 
         heatmap = get_gradcam_heatmap(processed_image, model)
         dominant_region, region_scores = explain_decision(heatmap)
@@ -361,6 +479,8 @@ async def explain_url_endpoint(payload: ImageURLRequest):
             "explanation": explanation,
             "heatmap_image_base64": heatmap_image,
             "original_image_base64": original_image_base64,
+            "used_api_fallback": used_api,
+            "api_prediction": api_label,
         }
 
     except HTTPException as he:

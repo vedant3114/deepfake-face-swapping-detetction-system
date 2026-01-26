@@ -6,7 +6,9 @@ torchaudio
 torchvision
 opencv-python-headless
 numpy
-yt-dlp
+yt-dlp>=2024.0.0
 requests
 pydantic
 soundfile
+certifi
+brotli

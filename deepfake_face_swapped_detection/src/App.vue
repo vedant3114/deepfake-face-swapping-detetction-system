@@ -432,6 +432,7 @@
                   <p class="text-[#8dcece] text-sm">
                     CONFIDENCE: {{ imageConfidence }}%
                   </p>
+
                 </div>
                 <div class="bg-[#204b4b] rounded-lg p-4 border border-[#2e6b6b]">
                   <h3 class="text-white text-sm font-bold mb-2">EXPLANATION ANALYSIS</h3>
@@ -539,6 +540,7 @@
                       <p class="text-[#8dcece] text-sm">
                         CONFIDENCE: {{ imageConfidence }}%
                       </p>
+
                     </div>
                     <div class="bg-[#204b4b] rounded-lg p-4 border border-[#2e6b6b] w-full">
                       <h3 class="text-white text-sm font-bold mb-2">EXPLANATION ANALYSIS</h3>
@@ -730,6 +732,7 @@
         </p>
         <p style="margin: 10px 0; font-size: 14px;"><strong>Confidence Score:</strong> {{ imageConfidence }}%</p>
         <p style="margin: 10px 0; font-size: 14px;"><strong>Raw Score:</strong> {{ imageExplanationResult?.raw_score?.toFixed(4) ?? 'N/A' }}</p>
+
       </div>
 
       <!-- Original Image -->
@@ -865,6 +868,44 @@
         <p style="margin: 5px 0;">For inquiries or questions, contact support.</p>
       </div>
     </div>
+
+    <!-- PDF Preview Modal -->
+    <div v-if="showPdfPreview" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+      <div class="bg-[#0a0e2a] border border-[#00ffff] rounded-2xl w-full max-w-5xl h-[85vh] flex flex-col shadow-[0_0_50px_rgba(0,255,255,0.2)]">
+        <div class="flex justify-between items-center p-4 border-b border-[#2e6b6b]">
+          <h3 class="text-[#00ffff] text-lg font-bold tracking-wider">REPORT PREVIEW</h3>
+          <button @click="closePdfPreview" class="text-[#8dcece] hover:text-white transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="w-6 h-6">
+              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="flex-1 bg-[#202020] p-1 overflow-hidden relative">
+          <iframe :src="pdfPreviewUrl" class="w-full h-full border-none rounded-lg" title="PDF Preview"></iframe>
+        </div>
+
+        <div class="flex justify-end gap-3 p-4 border-t border-[#2e6b6b] bg-[#0f1535]">
+          <button 
+            @click="closePdfPreview" 
+            class="px-6 py-2 rounded-lg bg-[#204b4b] text-white text-sm font-bold hover:bg-[#2e6b6b] transition-colors"
+          >
+            CLOSE
+          </button>
+          <button 
+            @click="downloadPdf" 
+            class="px-6 py-2 rounded-lg bg-[#00ffff] text-[#0a0e2a] text-sm font-bold hover:bg-[#8dcece] transition-colors flex items-center gap-2"
+          >
+            <span>DOWNLOAD PDF</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -944,6 +985,13 @@ const imageDetectionMode = ref<'upload' | 'url'>('upload');
 const imageUrl = ref('');
 const imageUrlLoading = ref(false);
 const imageOriginalUrl = ref(''); // Store original image URL separately from heatmap
+const imageUsedApiFallback = ref(false);
+
+// PDF Preview State
+const showPdfPreview = ref(false);
+const pdfPreviewUrl = ref('');
+const pdfAnalysisType = ref<'image' | 'video'>('image');
+const pdfBlob = ref<Blob | null>(null);
 
 // Steps for the process
 const steps = [
@@ -1249,7 +1297,9 @@ const resetImageUpload = () => {
   imageProgress.value = 0;
   imageAnalysisComplete.value = false;
   imagePreviewUrl.value = '';
+  imagePreviewUrl.value = '';
   imageConfidence.value = 0;
+  imageUsedApiFallback.value = false;
 };
 
 const startImageAnalysis = async () => {
@@ -1265,8 +1315,8 @@ const startImageAnalysis = async () => {
     const form = new FormData();
     form.append('file', file);
 
-    // Call local backend on port 8000
-    const resp = await fetch('https://manya2040-backend-image.hf.space/explain', {
+    // Call local backend on port 8001
+    const resp = await fetch('http://127.0.0.1:8001/explain', {
       method: 'POST',
       body: form,
     });
@@ -1297,8 +1347,11 @@ const startImageAnalysis = async () => {
       region_scores: data.region_scores || { 'Eyes/Forehead': 0, 'Nose/Cheeks': 0, 'Mouth/Chin': 0 },
       explanation: data.explanation || 'No explanation provided.',
       heatmap_image_base64: data.heatmap_image_base64 || '',
-      original_image: imagePreviewUrl.value // Keep original image reference
+      original_image: imagePreviewUrl.value, // Keep original image reference
+      used_api_fallback: data.used_api_fallback || false
     };
+    
+    imageUsedApiFallback.value = data.used_api_fallback || false;
     
     imageExplanationText.value = data.explanation || 'No explanation provided.';
     imageHeatmapBase64.value = data.heatmap_image_base64 || '';
@@ -1329,7 +1382,9 @@ const resetImageAnalysis = () => {
   imagePreviewUrl.value = '';
   imageConfidence.value = 0;
   imageDominantFocusRegion.value = '';
+  imageDominantFocusRegion.value = '';
   imageRegionScores.value = null;
+  imageUsedApiFallback.value = false;
 };
 
 const predictImageFromUrl = async () => {
@@ -1384,8 +1439,11 @@ const predictImageFromUrl = async () => {
           region_scores: data.region_scores || { 'Eyes/Forehead': 0, 'Nose/Cheeks': 0, 'Mouth/Chin': 0 },
           explanation: data.explanation || 'No explanation provided.',
           heatmap_image_base64: data.heatmap_image_base64 || '',
-          original_image: imageUrl.value // Keep original URL reference
+          original_image: imageUrl.value, // Keep original URL reference
+          used_api_fallback: data.used_api_fallback || false
         };
+
+        imageUsedApiFallback.value = data.used_api_fallback || false;
 
         imageProgress.value = 100;
         imageAnalysisComplete.value = true;
@@ -1409,7 +1467,9 @@ const resetImageUrl = () => {
     imagePreviewUrl.value = '';
     imageOriginalUrl.value = '';
     imageDominantFocusRegion.value = '';
+    imageDominantFocusRegion.value = '';
     imageRegionScores.value = null;
+    imageUsedApiFallback.value = false;
 };
 
 const generatePDFReport = async (analysisType: 'image' | 'video') => {
@@ -1508,14 +1568,12 @@ const generatePDFReport = async (analysisType: 'image' | 'video') => {
       heightLeft -= 297;
     }
 
-    // Download PDF
-    const timestamp = new Date().getTime();
-    const fileName =
-      analysisType === 'image'
-        ? `deepfake-analysis-${image.value?.name || 'image'}-${timestamp}.pdf`
-        : `deepfake-analysis-${file.value?.name || 'video'}-${timestamp}.pdf`;
-
-    pdf.save(fileName);
+    // Generate Blob for Preview instead of solving immediately
+    const pdfOutput = pdf.output('blob');
+    pdfBlob.value = pdfOutput;
+    pdfPreviewUrl.value = URL.createObjectURL(pdfOutput);
+    pdfAnalysisType.value = analysisType;
+    showPdfPreview.value = true;
     
     // Reset button text
     if (originalText?.textContent) {
@@ -1527,6 +1585,33 @@ const generatePDFReport = async (analysisType: 'image' | 'video') => {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     alert(`Failed to generate PDF report: ${errorMessage}`);
   }
+};
+
+const downloadPdf = () => {
+  if (!pdfBlob.value) return;
+  
+  const timestamp = new Date().getTime();
+  const fileName =
+    pdfAnalysisType.value === 'image'
+      ? `deepfake-analysis-${image.value?.name || 'image'}-${timestamp}.pdf`
+      : `deepfake-analysis-${file.value?.name || 'video'}-${timestamp}.pdf`;
+
+  // Create temporary link to download
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(pdfBlob.value);
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+const closePdfPreview = () => {
+  showPdfPreview.value = false;
+  if (pdfPreviewUrl.value) {
+    URL.revokeObjectURL(pdfPreviewUrl.value);
+    pdfPreviewUrl.value = '';
+  }
+  pdfBlob.value = null;
 };
 </script>
 
