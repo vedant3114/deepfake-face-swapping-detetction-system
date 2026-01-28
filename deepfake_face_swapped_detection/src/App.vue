@@ -306,6 +306,14 @@
         </div>
 
         <div class="flex flex-col p-3 sm:p-4">
+          <!-- Recommendation Note -->
+          <div class="bg-red-900 bg-opacity-30 border border-red-500 rounded-lg px-3 sm:px-4 py-2 sm:py-3 mb-4">
+            <p class="text-red-400 text-xs sm:text-sm font-medium flex items-start gap-2">
+              <span class="text-red-500 text-base sm:text-lg">⚠️</span>
+              <span><strong>RECOMMENDATION:</strong> Upload images in correct orientation (upright) for more accurate detection results.</span>
+            </p>
+          </div>
+
           <!-- Image Upload Mode -->
           <div v-show="imageDetectionMode === 'upload'">
           <div
@@ -1046,6 +1054,11 @@ const faqs = [
   {
     question: 'WHAT IS EXPLAINABILITY?',
     answer: 'The explainability feature provides detailed temporal analysis showing frame-by-frame consistency scores, anomaly detection, and cross-modal audio-video synchronization analysis.',
+    open: false
+  },
+  {
+    question: 'HOW CAN I GET MORE ACCURATE DETECTION RESULTS?',
+    answer: 'For best results, ensure you upload media files in the correct orientation (upright). Images and videos that are rotated or tilted may result in less accurate detection. Additionally, use high-quality media files with clear facial features.',
     open: false
   }
 ];
