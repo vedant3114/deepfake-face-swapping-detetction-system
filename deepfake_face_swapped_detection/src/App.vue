@@ -1376,7 +1376,7 @@ const startImageAnalysis = async () => {
     form.append('file', file);
 
     // Call backend API
-    const resp = await fetch(`${IMAGE_API_URL}/explain`, {
+    const resp = await fetch('http://127.0.0.1:8001/explain', {
       method: 'POST',
       body: form,
     });
@@ -1461,7 +1461,7 @@ const predictImageFromUrl = async () => {
     imagePreviewUrl.value = imageUrl.value;
 
     try {
-        const resp = await fetch(`${IMAGE_API_URL}/explain-url`, {
+        const resp = await fetch('http://127.0.0.1:8001/explain-url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: imageUrl.value })
