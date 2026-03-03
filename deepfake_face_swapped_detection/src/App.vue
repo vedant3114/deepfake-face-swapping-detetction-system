@@ -78,13 +78,23 @@
             @click="detectionMode = 'upload'"
             :class="['px-3 sm:px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200 cyber-tab', detectionMode === 'upload' ? 'active' : '']"
           >
-            📁 UPLOAD VIDEO
+            <span class="inline-flex items-center gap-2">
+              <svg viewBox="0 -960 960 960" class="w-4 h-4" fill="currentColor" aria-hidden="true">
+                <path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Zm0 0v-480 480Z"/>
+              </svg>
+              <span>UPLOAD VIDEO</span>
+            </span>
           </button>
           <button
             @click="detectionMode = 'url'"
             :class="['px-3 sm:px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200 cyber-tab', detectionMode === 'url' ? 'active' : '']"
           >
-            🔗 VIDEO URL
+            <span class="inline-flex items-center gap-2">
+              <svg viewBox="0 -960 960 960" class="w-4 h-4" fill="currentColor" aria-hidden="true">
+                <path d="M318-120q-82 0-140-58t-58-140q0-40 15-76t43-64l134-133 56 56-134 134q-17 17-25.5 38.5T200-318q0 49 34.5 83.5T318-200q23 0 45-8.5t39-25.5l133-134 57 57-134 133q-28 28-64 43t-76 15Zm79-220-57-57 223-223 57 57-223 223Zm251-28-56-57 134-133q17-17 25-38t8-44q0-50-34-85t-84-35q-23 0-44.5 8.5T558-726L425-592l-57-56 134-134q28-28 64-43t76-15q82 0 139.5 58T839-641q0 39-14.5 75T782-502L648-368Z"/>
+              </svg>
+              <span>VIDEO URL</span>
+            </span>
           </button>
         </div>
 
@@ -226,7 +236,7 @@
           <!-- URL Mode -->
           <div v-show="detectionMode === 'url'" class="w-full">
             <div class="flex flex-col gap-4">
-              <p class="text-white text-sm font-medium">ENTER A VIDEO URL FROM SUPPORTED PLATFORMS:</p>
+              <p class="text-white text-sm font-medium">ENTER A VIDEO URL:</p>
               <div class="flex gap-2">
                 <input
                   v-model="videoUrl"
@@ -295,19 +305,34 @@
             @click="imageDetectionMode = 'upload'"
             :class="['px-3 sm:px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200 cyber-tab', imageDetectionMode === 'upload' ? 'active' : '']"
           >
-            📁 UPLOAD IMAGE
+            <span class="inline-flex items-center gap-2">
+              <svg viewBox="0 -960 960 960" class="w-4 h-4" fill="currentColor" aria-hidden="true">
+                <path d="M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h240l80 80h320q33 0 56.5 23.5T880-640v400q0 33-23.5 56.5T800-160H160Zm0-80h640v-400H447l-80-80H160v480Zm0 0v-480 480Z"/>
+              </svg>
+              <span>UPLOAD IMAGE</span>
+            </span>
           </button>
           <button
             @click="imageDetectionMode = 'url'"
             :class="['px-3 sm:px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200 cyber-tab', imageDetectionMode === 'url' ? 'active' : '']"
           >
-            🔗 IMAGE URL
+            <span class="inline-flex items-center gap-2">
+              <svg viewBox="0 -960 960 960" class="w-4 h-4" fill="currentColor" aria-hidden="true">
+                <path d="M318-120q-82 0-140-58t-58-140q0-40 15-76t43-64l134-133 56 56-134 134q-17 17-25.5 38.5T200-318q0 49 34.5 83.5T318-200q23 0 45-8.5t39-25.5l133-134 57 57-134 133q-28 28-64 43t-76 15Zm79-220-57-57 223-223 57 57-223 223Zm251-28-56-57 134-133q17-17 25-38t8-44q0-50-34-85t-84-35q-23 0-44.5 8.5T558-726L425-592l-57-56 134-134q28-28 64-43t76-15q82 0 139.5 58T839-641q0 39-14.5 75T782-502L648-368Z"/>
+              </svg>
+              <span>IMAGE URL</span>
+            </span>
           </button>
         </div>
 
         <div class="flex flex-col p-3 sm:p-4">
           <!-- Recommendation Note -->
-          <p class="text-#2e6b6b text-xs sm:text-sm font-medium mb-4">!<strong>SUGGESTION:</strong> Upload images in correct orientation (upright) for more accurate detection results.</p>
+          <div class="bg-[#00ffff] bg-opacity-10 border border-[#00ffff] rounded-lg px-3 sm:px-4 py-2 sm:py-3 mb-4">
+            <p class="text-[#8dcece] text-xs sm:text-sm font-medium flex items-start gap-2">
+              <span class="text-[#00ffff] text-base sm:text-lg"></span>
+              <span><strong>SUGGESTION:</strong> Upload images in correct orientation (upright) for more accurate detection results.</span>
+            </p>
+          </div>
 
           <!-- Image Upload Mode -->
           <div v-show="imageDetectionMode === 'upload'">
@@ -1350,8 +1375,8 @@ const startImageAnalysis = async () => {
     const form = new FormData();
     form.append('file', file);
 
-    // Call local backend on port 8001
-    const resp = await fetch('http://127.0.0.1:8001/explain', {
+    // Call backend API
+    const resp = await fetch(`${IMAGE_API_URL}/explain`, {
       method: 'POST',
       body: form,
     });
@@ -1436,7 +1461,7 @@ const predictImageFromUrl = async () => {
     imagePreviewUrl.value = imageUrl.value;
 
     try {
-        const resp = await fetch('http://127.0.0.1:8001/explain-url', {
+        const resp = await fetch(`${IMAGE_API_URL}/explain-url`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: imageUrl.value })
