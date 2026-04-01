@@ -3,6 +3,16 @@
     class="relative flex h-auto min-h-screen w-full flex-col dark group/design-root overflow-x-hidden cyber-theme"
     style='font-family: "Orbitron", "Space Grotesk", "Noto Sans", sans-serif;'
   >
+    <transition name="fade-slide">
+      <div v-if="showSuggestionPopup" class="upload-suggestion-popup" role="alert" aria-live="polite">
+        <div class="popup-title">
+          <img :src="fileIcon" alt="File icon" class="popup-icon" />
+          <span>Unsupported file detected</span>
+        </div>
+        <p class="popup-message">{{ suggestionMessage }}</p>
+      </div>
+    </transition>
+
     <!-- Cyber Background Overlay -->
     <div class="fixed inset-0 z-0 cyber-bg">
       <div class="absolute inset-0 bg-gradient-to-br from-[#0a0e2a] via-[#1a103d] to-[#0a0e2a]"></div>
@@ -130,7 +140,7 @@
               <input
                 type="file"
                 ref="fileInput"
-                accept="video/mp4,video/avi,video/mov"
+                accept=".mp4,.avi,.mov,video/mp4,video/x-msvideo,video/quicktime"
                 @change="handleFileUpload"
                 class="hidden"
               />
@@ -150,6 +160,13 @@
                   </button>
                 </div>
               </div>
+              <video
+                v-if="uploadedVideoPreviewUrl"
+                :src="uploadedVideoPreviewUrl"
+                controls
+                preload="metadata"
+                class="w-full max-w-[480px] rounded-lg border border-[#2e6b6b] bg-black"
+              ></video>
             </div>
 
             <div v-if="fileUploaded && !analysisComplete" class="flex flex-col gap-2 sm:gap-3 mt-4 cyber-analysis-status">
@@ -221,7 +238,10 @@
                   @click="generatePDFReport('video')"
                   class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button"
                 >
-                  <span class="truncate">📄 PDF REPORT</span>
+                  <span class="truncate pdf-btn-label-with-icon">
+                    <img :src="isGeneratingPdf ? hourglassIcon : pdfIcon" :alt="isGeneratingPdf ? 'Generating icon' : 'PDF icon'" class="pdf-btn-icon" />
+                    <span>{{ isGeneratingPdf ? 'GENERATING...' : 'PDF REPORT' }}</span>
+                  </span>
                 </button>
                 <button
                   @click="resetAnalysis"
@@ -236,7 +256,10 @@
           <!-- URL Mode -->
           <div v-show="detectionMode === 'url'" class="w-full">
             <div class="flex flex-col gap-4">
-              <p class="text-white text-sm font-medium">ENTER A VIDEO URL:</p>
+              <p class="text-white text-sm font-medium url-label-with-icon">
+                <img :src="linkIcon" alt="Link icon" class="inline-label-icon" />
+                <span>ENTER A VIDEO URL:</span>
+              </p>
               <div class="flex gap-2">
                 <input
                   v-model="videoUrl"
@@ -274,7 +297,10 @@
                   @click="generatePDFReport('video')"
                   class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button"
                 >
-                  <span class="truncate">📄 PDF REPORT</span>
+                  <span class="truncate pdf-btn-label-with-icon">
+                    <img :src="isGeneratingPdf ? hourglassIcon : pdfIcon" :alt="isGeneratingPdf ? 'Generating icon' : 'PDF icon'" class="pdf-btn-icon" />
+                    <span>{{ isGeneratingPdf ? 'GENERATING...' : 'PDF REPORT' }}</span>
+                  </span>
                 </button>
                 <button
                   @click="resetUrl"
@@ -367,7 +393,7 @@
             <input
               type="file"
               ref="imageFileInput"
-              accept="image/jpeg,image/png,image/webp"
+              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
               @change="handleImageFileUpload"
               class="hidden"
             />
@@ -490,7 +516,10 @@
                 @click="generatePDFReport('image')"
                 class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-3 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button"
               >
-                <span class="truncate">📄 PDF REPORT</span>
+                <span class="truncate pdf-btn-label-with-icon">
+                  <img :src="isGeneratingPdf ? hourglassIcon : pdfIcon" :alt="isGeneratingPdf ? 'Generating icon' : 'PDF icon'" class="pdf-btn-icon" />
+                  <span>{{ isGeneratingPdf ? 'GENERATING...' : 'PDF REPORT' }}</span>
+                </span>
               </button>
               <button
                 @click="resetImageAnalysis"
@@ -506,7 +535,10 @@
         <!-- Image URL Mode -->
           <div v-show="imageDetectionMode === 'url'" class="w-full">
             <div class="flex flex-col gap-4">
-              <p class="text-white text-sm font-medium">ENTER AN IMAGE URL:</p>
+              <p class="text-white text-sm font-medium url-label-with-icon">
+                <img :src="linkIcon" alt="Link icon" class="inline-label-icon" />
+                <span>ENTER AN IMAGE URL:</span>
+              </p>
               <div class="flex gap-2">
                 <input
                   v-model="imageUrl"
@@ -598,7 +630,10 @@
                     @click="generatePDFReport('image')"
                     class="flex flex-1 sm:flex-none min-w-[64px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#00ffff] text-[#0f2424] text-xs font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 cyber-button"
                   >
-                    <span class="truncate">📄 PDF REPORT</span>
+                    <span class="truncate pdf-btn-label-with-icon">
+                      <img :src="isGeneratingPdf ? hourglassIcon : pdfIcon" :alt="isGeneratingPdf ? 'Generating icon' : 'PDF icon'" class="pdf-btn-icon" />
+                      <span>{{ isGeneratingPdf ? 'GENERATING...' : 'PDF REPORT' }}</span>
+                    </span>
                   </button>
                   <button
                     @click="resetImageUrl"
@@ -821,8 +856,8 @@
 
       <div style="margin-bottom: 20px; font-size: 14px;">
         <p><strong>Report Date:</strong> {{ new Date().toLocaleString() }}</p>
-        <p><strong>File Name:</strong> {{ file?.name || videoUrl || 'Video' }}</p>
-        <p v-if="file"><strong>File Size:</strong> {{ ((file?.size ?? 0) / 1024 / 1024).toFixed(2) }} MB</p>
+        <p><strong>Source:</strong> {{ detectionMode === 'url' ? (videoUrl || 'N/A') : (file?.name || 'Video') }}</p>
+        <p v-if="detectionMode === 'upload' && file"><strong>File Size:</strong> {{ ((file?.size ?? 0) / 1024 / 1024).toFixed(2) }} MB</p>
         <p><strong>Analysis Model:</strong> Multi-Modal Deepfake Detector (Audio-Visual)</p>
       </div>
 
@@ -918,7 +953,7 @@
       <!-- Footer -->
       <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; text-align: center;">
         <p style="margin: 5px 0;">Generated by: Deepfake Detection System v1.0</p>
-        <p style="margin: 5px 0;">Report ID: {{ file?.name || videoUrl || new Date().getTime() }}</p>
+        <p style="margin: 5px 0;">Report ID: {{ detectionMode === 'url' ? (videoUrl || new Date().getTime()) : (file?.name || new Date().getTime()) }}</p>
         <p style="margin: 5px 0;">For inquiries or questions, contact support.</p>
       </div>
     </div>
@@ -968,6 +1003,10 @@ import { ref, onMounted } from 'vue';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import DeepfakeExplainability from './components/DeepfakeExplainability.vue';
+import fileIcon from '../icons/file icon.svg';
+import linkIcon from '../icons/link icon.svg';
+import pdfIcon from '../icons/pdf.svg';
+import hourglassIcon from '../icons/hourglass.svg';
 
 // Vanta.NET background initialization
 onMounted(() => {
@@ -1005,6 +1044,7 @@ const progress = ref(0);
 const currentStep = ref(0);
 const draggedOver = ref(false);
 const analysisImageUrl = ref('');
+const uploadedVideoPreviewUrl = ref('');
 
 // URL Prediction
 const videoUrl = ref('');
@@ -1040,12 +1080,22 @@ const imageUrl = ref('');
 const imageUrlLoading = ref(false);
 const imageOriginalUrl = ref(''); // Store original image URL separately from heatmap
 const imageUsedApiFallback = ref(false);
+const showSuggestionPopup = ref(false);
+const suggestionMessage = ref('');
+
+let popupTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'avi', 'mov'];
+const ALLOWED_VIDEO_MIME_TYPES = ['video/mp4', 'video/x-msvideo', 'video/avi', 'video/msvideo', 'video/quicktime'];
+const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 // PDF Preview State
 const showPdfPreview = ref(false);
 const pdfPreviewUrl = ref('');
 const pdfAnalysisType = ref<'image' | 'video'>('image');
 const pdfBlob = ref<Blob | null>(null);
+const isGeneratingPdf = ref(false);
 
 // Steps for the process
 const steps = [
@@ -1091,6 +1141,50 @@ const scrollToDetection = () => {
   }
 };
 
+const showUploadSuggestion = (message: string) => {
+  suggestionMessage.value = message;
+  showSuggestionPopup.value = true;
+
+  if (popupTimeout) {
+    clearTimeout(popupTimeout);
+  }
+
+  popupTimeout = setTimeout(() => {
+    showSuggestionPopup.value = false;
+  }, 3600);
+};
+
+const getFileExtension = (fileName: string) => {
+  return fileName.split('.').pop()?.toLowerCase() ?? '';
+};
+
+const isAcceptedVideoFile = (candidateFile: File) => {
+  const extension = getFileExtension(candidateFile.name);
+  return (
+    ALLOWED_VIDEO_EXTENSIONS.includes(extension) ||
+    ALLOWED_VIDEO_MIME_TYPES.includes(candidateFile.type)
+  );
+};
+
+const isAcceptedImageFile = (candidateFile: File) => {
+  const extension = getFileExtension(candidateFile.name);
+  return (
+    ALLOWED_IMAGE_EXTENSIONS.includes(extension) ||
+    ALLOWED_IMAGE_MIME_TYPES.includes(candidateFile.type)
+  );
+};
+
+const refreshUploadedVideoPreview = (selectedVideo: File | null) => {
+  if (uploadedVideoPreviewUrl.value) {
+    URL.revokeObjectURL(uploadedVideoPreviewUrl.value);
+    uploadedVideoPreviewUrl.value = '';
+  }
+
+  if (selectedVideo) {
+    uploadedVideoPreviewUrl.value = URL.createObjectURL(selectedVideo);
+  }
+};
+
 const triggerFileInput = () => {
   if (fileInput.value) {
     fileInput.value.click();
@@ -1100,7 +1194,15 @@ const triggerFileInput = () => {
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files.length > 0 && target.files[0]) {
-    file.value = target.files[0];
+    const selectedFile = target.files[0];
+    if (!isAcceptedVideoFile(selectedFile)) {
+      showUploadSuggestion('Please upload a video in MP4, AVI, or MOV format only.');
+      target.value = '';
+      return;
+    }
+
+    file.value = selectedFile;
+    refreshUploadedVideoPreview(selectedFile);
     fileUploaded.value = true;
     progress.value = 0;
     analysisComplete.value = false;
@@ -1114,15 +1216,25 @@ const handleFileDrop = (event: DragEvent) => {
   draggedOver.value = false;
 
   if (event.dataTransfer && event.dataTransfer.files.length > 0 && event.dataTransfer.files[0]) {
-    file.value = event.dataTransfer.files[0];
+    const droppedFile = event.dataTransfer.files[0];
+    if (!isAcceptedVideoFile(droppedFile)) {
+      showUploadSuggestion('Only MP4, AVI, or MOV videos are allowed. Please choose a supported video file.');
+      return;
+    }
+
+    file.value = droppedFile;
+    refreshUploadedVideoPreview(droppedFile);
     fileUploaded.value = true;
     progress.value = 0;
     analysisComplete.value = false;
     analysisResult.value = 'AUTHENTIC';
+  } else {
+    showUploadSuggestion('Please drop a valid video file (MP4, AVI, or MOV).');
   }
 };
 
 const resetUpload = () => {
+  refreshUploadedVideoPreview(null);
   file.value = null;
   fileUploaded.value = false;
   progress.value = 0;
@@ -1297,6 +1409,7 @@ const resetAnalysis = () => {
 };
 
 const resetUrl = () => {
+  refreshUploadedVideoPreview(null);
   videoUrl.value = '';
   analysisComplete.value = false;
   progress.value = 0;
@@ -1315,7 +1428,14 @@ const triggerImageFileInput = () => {
 const handleImageFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement;
   if (target.files && target.files.length > 0 && target.files[0]) {
-    image.value = target.files[0];
+    const selectedImage = target.files[0];
+    if (!isAcceptedImageFile(selectedImage)) {
+      showUploadSuggestion('Please upload an image in JPG, JPEG, PNG, or WebP format only.');
+      target.value = '';
+      return;
+    }
+
+    image.value = selectedImage;
     imageUploaded.value = true;
     imageProgress.value = 0;
     imageAnalysisComplete.value = false;
@@ -1325,7 +1445,7 @@ const handleImageFileUpload = (event: Event) => {
     reader.onload = (e) => {
       imagePreviewUrl.value = e.target?.result as string;
     };
-    reader.readAsDataURL(target.files[0]);
+    reader.readAsDataURL(selectedImage);
   }
 };
 
@@ -1335,19 +1455,24 @@ const handleImageDrop = (event: DragEvent) => {
 
   if (event.dataTransfer && event.dataTransfer.files.length > 0 && event.dataTransfer.files[0]) {
     const droppedFile = event.dataTransfer.files[0];
-    if (droppedFile.type.startsWith('image/')) {
-      image.value = droppedFile;
-      imageUploaded.value = true;
-      imageProgress.value = 0;
-      imageAnalysisComplete.value = false;
-      imageAnalysisResult.value = 'AUTHENTIC';
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        imagePreviewUrl.value = e.target?.result as string;
-      };
-      reader.readAsDataURL(droppedFile);
+    if (!isAcceptedImageFile(droppedFile)) {
+      showUploadSuggestion('Only JPG, JPEG, PNG, or WebP images are allowed. Please choose a supported image file.');
+      return;
     }
+
+    image.value = droppedFile;
+    imageUploaded.value = true;
+    imageProgress.value = 0;
+    imageAnalysisComplete.value = false;
+    imageAnalysisResult.value = 'AUTHENTIC';
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreviewUrl.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(droppedFile);
+  } else {
+    showUploadSuggestion('Please drop a valid image file (JPG, JPEG, PNG, or WebP).');
   }
 };
 
@@ -1534,6 +1659,7 @@ const resetImageUrl = () => {
 
 const generatePDFReport = async (analysisType: 'image' | 'video') => {
   try {
+    isGeneratingPdf.value = true;
     const reportElement = document.getElementById(
       analysisType === 'image' ? 'imagePdfReport' : 'videoPdfReport'
     );
@@ -1542,12 +1668,6 @@ const generatePDFReport = async (analysisType: 'image' | 'video') => {
       console.error('Report element not found');
       alert('Report element not found. Please try again.');
       return;
-    }
-
-    // Show loading message
-    const originalText = document.activeElement as HTMLButtonElement;
-    if (originalText?.textContent) {
-      originalText.textContent = '⏳ GENERATING...';
     }
 
     // Convert all images in the report to base64 to avoid CORS issues
@@ -1594,9 +1714,6 @@ const generatePDFReport = async (analysisType: 'image' | 'video') => {
     } catch (canvasError) {
       console.error('Canvas conversion error:', canvasError);
       alert(`Failed to convert report to image: ${canvasError instanceof Error ? canvasError.message : 'Unknown error'}`);
-      if (originalText?.textContent) {
-        originalText.textContent = '📄 PDF REPORT';
-      }
       return;
     }
 
@@ -1634,16 +1751,12 @@ const generatePDFReport = async (analysisType: 'image' | 'video') => {
     pdfPreviewUrl.value = URL.createObjectURL(pdfOutput);
     pdfAnalysisType.value = analysisType;
     showPdfPreview.value = true;
-    
-    // Reset button text
-    if (originalText?.textContent) {
-      originalText.textContent = '📄 PDF REPORT';
-    }
-    
   } catch (error) {
     console.error('PDF generation failed:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     alert(`Failed to generate PDF report: ${errorMessage}`);
+  } finally {
+    isGeneratingPdf.value = false;
   }
 };
 
@@ -1654,7 +1767,7 @@ const downloadPdf = () => {
   const fileName =
     pdfAnalysisType.value === 'image'
       ? `deepfake-analysis-${image.value?.name || 'image'}-${timestamp}.pdf`
-      : `deepfake-analysis-${file.value?.name || 'video'}-${timestamp}.pdf`;
+      : `deepfake-analysis-${detectionMode.value === 'url' ? 'video-url' : (file.value?.name || 'video')}-${timestamp}.pdf`;
 
   // Create temporary link to download
   const link = document.createElement('a');
@@ -1860,6 +1973,79 @@ body {
   color: #00ffff;
   border: 1px solid rgba(0, 255, 255, 0.2);
   transition: all 0.3s ease;
+}
+
+.upload-suggestion-popup {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 999;
+  width: min(360px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.45);
+  background: rgba(10, 14, 42, 0.95);
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.24);
+}
+
+.popup-title {
+  color: #00ffff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.popup-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+.url-label-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-label-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+.pdf-btn-label-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdf-btn-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+}
+
+.popup-message {
+  color: #c7f6f6;
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.25s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 .cyber-button-secondary:hover {

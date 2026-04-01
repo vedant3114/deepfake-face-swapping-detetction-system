@@ -31,7 +31,10 @@
       <div v-show="activeTab === 'summary'" class="tab-pane">
         <div class="prediction-card cyber-card">
           <div class="prediction-header">
-            <h3>📊 PREDICTION SUMMARY</h3>
+            <h3 class="title-with-icon">
+              <img :src="icons.pdf" alt="PDF icon" class="section-svg-icon" />
+              <span>PREDICTION SUMMARY</span>
+            </h3>
             <div :class="['prediction-badge cyber-badge', prediction.label.toLowerCase()]">
               {{ prediction.label }}
             </div>
@@ -57,7 +60,10 @@
 
         <!-- Global Consistency Scores -->
         <div class="consistency-summary cyber-section">
-          <h3>📊 GLOBAL CONSISTENCY SCORES</h3>
+          <h3 class="title-with-icon">
+            <img :src="icons.barchart" alt="Bar chart icon" class="section-svg-icon" />
+            <span>GLOBAL CONSISTENCY SCORES</span>
+          </h3>
           <div class="consistency-grid">
             <div class="consistency-item audio cyber-item">
               <div class="item-header">
@@ -98,7 +104,10 @@
       <!-- 2. Temporal Analysis Tab -->
       <div v-show="activeTab === 'temporal'" class="tab-pane">
         <div class="temporal-container cyber-section">
-          <h3>⏱️ TEMPORAL CONSISTENCY ANALYSIS</h3>
+          <h3 class="title-with-icon">
+            <img :src="icons.clock" alt="Clock icon" class="section-svg-icon" />
+            <span>TEMPORAL CONSISTENCY ANALYSIS</span>
+          </h3>
           <p class="description">
             DETECTS INCONSISTENCIES ACROSS VIDEO FRAMES. LOWER VALUES INDICATE POTENTIAL MANIPULATION.
           </p>
@@ -106,7 +115,10 @@
           <!-- Audio Temporal -->
           <div class="temporal-section cyber-subsection">
             <div class="section-header">
-              <h4>🔊 AUDIO TEMPORAL CONSISTENCY</h4>
+              <h4 class="title-with-icon">
+                <img :src="icons.sound" alt="Audio icon" class="section-svg-icon" />
+                <span>AUDIO TEMPORAL CONSISTENCY</span>
+              </h4>
               <span class="anomaly-count" v-if="anomalies.audio > 0">
                 {{ anomalies.audio }} ANOMALIES DETECTED
               </span>
@@ -120,7 +132,10 @@
           <!-- Video Temporal -->
           <div class="temporal-section cyber-subsection">
             <div class="section-header">
-              <h4>🎬 VIDEO TEMPORAL CONSISTENCY</h4>
+              <h4 class="title-with-icon">
+                <img :src="icons.movie" alt="Video icon" class="section-svg-icon" />
+                <span>VIDEO TEMPORAL CONSISTENCY</span>
+              </h4>
               <span class="anomaly-count" v-if="anomalies.video > 0">
                 {{ anomalies.video }} ANOMALIES DETECTED
               </span>
@@ -136,7 +151,10 @@
       <!-- 3. Anomaly Detection Tab -->
       <div v-show="activeTab === 'anomalies'" class="tab-pane">
         <div class="anomaly-container cyber-section">
-          <h3>🔍 ANOMALY DETECTION REPORT</h3>
+          <h3 class="title-with-icon">
+            <img :src="icons.search" alt="Search icon" class="section-svg-icon" />
+            <span>ANOMALY DETECTION REPORT</span>
+          </h3>
 
           <div class="severity-indicator cyber-severity" :class="severity.toLowerCase()">
             <i :class="severityIcon"></i>
@@ -181,8 +199,10 @@
           <div v-if="anomalies.audio_indices.length > 0 || anomalies.video_indices.length > 0" class="anomaly-details">
             <div v-if="anomalies.audio_indices.length > 0" class="anomaly-list audio cyber-anomaly-list">
               <div class="list-header">
-                <i class="fas fa-volume-up"></i>
-                <h4>🔊 AUDIO ANOMALY FRAMES</h4>
+                <h4 class="title-with-icon">
+                  <img :src="icons.sound" alt="Audio icon" class="section-svg-icon" />
+                  <span>AUDIO ANOMALY FRAMES</span>
+                </h4>
               </div>
               <div class="frame-list">
                 <span v-for="idx in anomalies.audio_indices" :key="'a-' + idx" class="frame-badge cyber-badge">
@@ -193,8 +213,10 @@
 
             <div v-if="anomalies.video_indices.length > 0" class="anomaly-list video cyber-anomaly-list">
               <div class="list-header">
-                <i class="fas fa-video"></i>
-                <h4>🎬 VIDEO ANOMALY FRAMES</h4>
+                <h4 class="title-with-icon">
+                  <img :src="icons.movie" alt="Video icon" class="section-svg-icon" />
+                  <span>VIDEO ANOMALY FRAMES</span>
+                </h4>
               </div>
               <div class="frame-list">
                 <span v-for="idx in anomalies.video_indices" :key="'v-' + idx" class="frame-badge cyber-badge">
@@ -207,8 +229,10 @@
           <!-- Anomalous Frames Gallery -->
           <div v-if="anomalies.frames.length > 0" class="frames-gallery cyber-gallery">
             <div class="list-header">
-              <i class="fas fa-images"></i>
-              <h4>📸 DETECTED ANOMALOUS FRAMES (LOWEST CONSISTENCY)</h4>
+              <h4 class="title-with-icon">
+                <img :src="icons.camera" alt="Camera icon" class="section-svg-icon" />
+                <span>DETECTED ANOMALOUS FRAMES (LOWEST CONSISTENCY)</span>
+              </h4>
             </div>
             <div class="frames-grid">
               <div v-for="(frame, i) in anomalies.frames" :key="i" class="frame-item cyber-frame">
@@ -234,7 +258,10 @@
       <!-- 4. Technical Details Tab -->
       <div v-show="activeTab === 'technical'" class="tab-pane">
         <div class="technical-container cyber-section">
-          <h3>⚙️ TECHNICAL ANALYSIS</h3>
+          <h3 class="title-with-icon">
+            <img :src="icons.gear" alt="Gear icon" class="section-svg-icon" />
+            <span>TECHNICAL ANALYSIS</span>
+          </h3>
 
           <div class="technical-section cyber-subsection">
             <div class="section-header">
@@ -283,6 +310,14 @@
 
 <script>
 import Chart from 'chart.js/auto';
+import pdfIcon from '../../icons/pdf.svg';
+import barchartIcon from '../../icons/barchart.svg';
+import clockIcon from '../../icons/clock.svg';
+import soundIcon from '../../icons/sound.svg';
+import movieIcon from '../../icons/movie.svg';
+import searchIcon from '../../icons/search.svg';
+import cameraIcon from '../../icons/camera.svg';
+import gearIcon from '../../icons/gear.svg';
 
 export default {
   name: 'DeepfakeExplainability',
@@ -316,6 +351,16 @@ export default {
         audio_indices: [],
         video_indices: [],
         frames: []
+      },
+      icons: {
+        pdf: pdfIcon,
+        barchart: barchartIcon,
+        clock: clockIcon,
+        sound: soundIcon,
+        movie: movieIcon,
+        search: searchIcon,
+        camera: cameraIcon,
+        gear: gearIcon
       },
       audioChart: null,
       videoChart: null
@@ -621,6 +666,18 @@ export default {
   margin: 0;
   color: #00ffff;
   font-size: 16px;
+}
+
+.title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-svg-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }
 
 .prediction-badge {
